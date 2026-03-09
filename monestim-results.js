@@ -726,7 +726,7 @@ async function generatePDF() {
   pageHeader();
 
   t('Checklist & calendrier',14,22,16,'bold',TEXT);
-  t('de mise en vente',14+57,22,16,'normal',GOLD);
+  t('de mise en vente',82,22,16,'normal',GOLD);
   ln(14,25,W-14,25,BG3,0.3);
 
   // ── CHECKLIST ──────────────────────────────────────────────
@@ -781,7 +781,7 @@ async function generatePDF() {
     { sem:'S3–S4',  label:'Mise en ligne',        desc:'Publication annonce, diffusion SeLoger/LBC/PAP',           col:GREEN },
     { sem:'S5–S8',  label:'Visites',              desc:'Organiser par créneaux, 2h entre chaque, bien aéré',       col:GREEN },
     { sem:'S6–S10', label:'Offres & négociation', desc:'Délai légal de réflexion 10j, contreproposition si besoin',col:ORANGE },
-    { sem:'S10+',   label:'Compromis → Acte',     desc:'Notaire : 3 mois en moyenne entre compromis et acte final',col:TEXT2 },
+    { sem:'S10+',   label:'Compromis - Acte',     desc:'Notaire : 3 mois en moyenne entre compromis et acte final',col:TEXT2 },
   ];
 
   calendar.forEach((step, idx) => {
@@ -800,7 +800,7 @@ async function generatePDF() {
   // Note finale
   clY += 4;
   rr(14, clY, W-28, 18, 2, [18,16,10], [201,168,76,0.3], 0.3);
-  t('💡 Conseil MonEstim', 20, clY+7, 8, 'bold', GOLD);
+  t('* Conseil MonEstim', 20, clY+7, 8, 'bold', GOLD);
   const conseil = p.urgenceData ? p.urgenceData.conseil : 'Positionnez-vous au prix de marché dès le départ pour maximiser les visites qualifiées.';
   doc.splitTextToSize(conseil, W-44).forEach((line, li) => {
     t(line, 20, clY+13+li*4.5, 7.5, 'normal', TEXT2);
