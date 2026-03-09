@@ -825,6 +825,164 @@ async function generatePDF() {
   t('monestim.fr', W/2, H-3.5, 6, 'bold', GOLD, 'center');
   t('Ref. '+ref+'  |  '+date, W-14, H-3.5, 6, 'normal', TEXT3, 'right');
 
+
+  // PAGE 7 — ANALYSE DÉTAILLÉE 7 DIMENSIONS
+  doc.addPage();
+  box(0,0,W,H,BG,null);
+  box(0,0,1.5,H,GOLD,null);
+  pageHeader();
+
+  t('Analyse détaillée',14,22,16,'bold',TEXT);
+  t('des 7 dimensions',14+49,22,16,'normal',GOLD);
+  ln(14,25,W-14,25,BG3,0.3);
+
+  const dims7 = [
+    { key:'localisation', label:'Localisation',      icon:'📍', poids:'26%' },
+    { key:'bien',         label:'Type & Structure',   icon:'🏠', poids:'18%' },
+    { key:'etat',         label:'État & Travaux',     icon:'🔧', poids:'20%' },
+    { key:'exterieur',    label:'Terrain & Extér.',   icon:'🌳', poids:'12%' },
+    { key:'marche',       label:'Marché local',       icon:'📊', poids:'14%' },
+    { key:'environnement',label:'Environnement',      icon:'🏢', poids:'6%'  },
+    { key:'fiscal',       label:'Juridique & Fiscal', icon:'⚖️', poids:'4%'  },
+  ];
+
+  let d7y = 30;
+  const barMaxW = W - 100;
+
+  dims7.forEach((dim, idx) => {
+    const score = s[dim.key] || 50;
+    const col = score >= 70 ? GREEN : score >= 45 ? ORANGE : RED;
+    const bgRow = idx % 2 === 0 ? [16,14,10] : [20,18,12];
+
+    rr(14, d7y, W-28, 26, 2, bgRow, null);
+
+    // Icône + label
+    t(dim.label, 22, d7y + 9, 9, 'bold', TEXT);
+    t('Poids : ' + dim.poids, 22, d7y + 17, 7, 'normal', TEXT3);
+
+    // Score
+    const scoreStr = score.toString();
+    t(scoreStr, W - 40, d7y + 11, 16, 'bold', col);
+    t('/100', W - 26, d7y + 14, 7, 'normal', TEXT3);
+
+    // Barre de progression
+    const barY = d7y + 19;
+    const barW = W - 110;
+    rr(22, barY, barW, 3, 1, [30,28,20], null);
+    const fillW = Math.max(2, Math.round((score / 100) * barW));
+    rr(22, barY, fillW, 3, 1, col, null);
+
+    // Label qualitatif
+    const lbl = score >= 80 ? 'Excellent' : score >= 70 ? 'Très bon' : score >= 60 ? 'Bon' : score >= 45 ? 'Moyen' : 'À améliorer';
+    t(lbl, 22 + barW + 4, barY + 2.5, 7, 'normal', col);
+
+    d7y += 29;
+  });
+
+  // Score global encadré
+  d7y += 4;
+  rr(14, d7y, W-28, 32, 3, [22,20,14], [201,168,76], 0.5);
+  t('Score global de votre bien', 22, d7y + 9, 9, 'bold', GOLD);
+  t('Moyenne pondérée des 7 dimensions selon leur impact sur la valeur de marché', 22, d7y + 17, 7, 'normal', TEXT3);
+  const gs = s.global || 0;
+  const gsCol = gs >= 70 ? GREEN : gs >= 45 ? ORANGE : RED;
+  const gsLbl = gs >= 80 ? 'Excellent' : gs >= 70 ? 'Très bon' : gs >= 60 ? 'Bon' : gs >= 45 ? 'Moyen' : 'À améliorer';
+  t(gs.toString(), W-50, d7y+11, 24, 'bold', gsCol);
+  t('/100', W-30, d7y+17, 8, 'normal', TEXT3);
+  t(gsLbl, W-50, d7y+26, 7, 'normal', gsCol);
+
+  pageFooter(7);
+
+  // PAGE 8 — CHECKLIST + CALENDRIER DE VENTE
+  doc.addPage();
+  box(0,0,W,H,BG,null);
+  box(0,0,1.5,H,GOLD,null);
+  pageHeader();
+
+  t('Checklist & calendrier',14,22,16,'bold',TEXT);
+  t('de mise en vente',14+57,22,16,'normal',GOLD);
+  ln(14,25,W-14,25,BG3,0.3);
+
+  // ── CHECKLIST ──────────────────────────────────────────────
+  t('CHECKLIST AVANT MISE EN VENTE',14,32,8,'bold',GOLD);
+
+  const checklist = [
+    { cat:'Diagnostics obligatoires', items:[
+      'DPE (Diagnostic de Performance Énergétique) — obligatoire',
+      'Diagnostic amiante (si avant 1997)',
+      'Diagnostic plomb (si avant 1949)',
+      'État des risques naturels et technologiques (ERNT)',
+      'Diagnostic électricité et gaz (si > 15 ans)',
+    ]},
+    { cat:'Préparation du bien', items:[
+      'Dépersonnalisation : rangement, objets personnels retirés',
+      'Petites réparations visibles (poignées, joints, peinture écaillée)',
+      'Nettoyage complet intérieur + extérieur',
+      'Optimisation de la luminosité (rideaux, ampoules)',
+      'Photos professionnelles (privilégier matin avec lumière naturelle)',
+    ]},
+    { cat:'Documents à rassembler', items:[
+      'Titre de propriété + surface loi Carrez si copropriété',
+      'Derniers avis de taxe foncière',
+      'Charges de copropriété (3 derniers PV d\'AG)',
+      'Plans du bien si disponibles',
+    ]},
+  ];
+
+  let clY = 36;
+  checklist.forEach(section => {
+    rr(14, clY, W-28, 8, 1, [26,22,14], null);
+    t(section.cat.toUpperCase(), 18, clY + 5.5, 7, 'bold', GOLD);
+    clY += 10;
+    section.items.forEach(item => {
+      // Checkbox
+      rr(18, clY + 0.5, 4, 4, 0.5, [30,28,20], [100,90,60], 0.3);
+      doc.splitTextToSize(item, W - 44).forEach((line, li) => {
+        t(line, 26, clY + 3.5 + li * 4, 7.5, 'normal', TEXT);
+      });
+      clY += 7;
+    });
+    clY += 3;
+  });
+
+  // ── CALENDRIER ──────────────────────────────────────────────
+  clY += 4;
+  t('CALENDRIER OPTIMAL DE VENTE',14, clY, 8,'bold',GOLD);
+  clY += 6;
+
+  const calendar = [
+    { sem:'S1–S2',  label:'Préparation',         desc:'Diagnostics, réparations, photos professionnelles',        col:GOLD },
+    { sem:'S3–S4',  label:'Mise en ligne',        desc:'Publication annonce, diffusion SeLoger/LBC/PAP',           col:GREEN },
+    { sem:'S5–S8',  label:'Visites',              desc:'Organiser par créneaux, 2h entre chaque, bien aéré',       col:GREEN },
+    { sem:'S6–S10', label:'Offres & négociation', desc:'Délai légal de réflexion 10j, contreproposition si besoin',col:ORANGE },
+    { sem:'S10+',   label:'Compromis → Acte',     desc:'Notaire : 3 mois en moyenne entre compromis et acte final',col:TEXT2 },
+  ];
+
+  calendar.forEach((step, idx) => {
+    const bgCal = idx % 2 === 0 ? [16,14,10] : [20,18,12];
+    rr(14, clY, W-28, 14, 1, bgCal, null);
+    // Semaine badge
+    rr(16, clY+2, 18, 10, 1, [26,22,14], null);
+    t(step.sem, 17, clY+8, 6.5, 'bold', GOLD);
+    // Label
+    t(step.label, 38, clY+6, 8.5, 'bold', step.col);
+    // Desc
+    t(step.desc, 38, clY+12, 7, 'normal', TEXT3);
+    clY += 16;
+  });
+
+  // Note finale
+  clY += 4;
+  rr(14, clY, W-28, 18, 2, [18,16,10], [201,168,76,0.3], 0.3);
+  t('💡 Conseil MonEstim', 20, clY+7, 8, 'bold', GOLD);
+  const conseil = p.urgenceData ? p.urgenceData.conseil : 'Positionnez-vous au prix de marché dès le départ pour maximiser les visites qualifiées.';
+  doc.splitTextToSize(conseil, W-44).forEach((line, li) => {
+    t(line, 20, clY+13+li*4.5, 7.5, 'normal', TEXT2);
+  });
+
+  pageFooter(8);
+
+
   doc.save('MonEstim_Rapport_'+p.ville+'_'+ref+'.pdf');
   if(btn){ btn.textContent='PDF telecharge !'; setTimeout(()=>{btn.textContent='Telecharger mon rapport PDF';btn.disabled=false;},3000); }
 }
