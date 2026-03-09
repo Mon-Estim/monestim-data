@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MonEstim — Votre estimation</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<!-- Code scoring + PDF chargé depuis Netlify -->
+<script src="https://warm-blini-6f9f85.netlify.app/monestim-results.js"></script>
+<link rel="stylesheet" href="https://warm-blini-6f9f85.netlify.app/monestim-styles.css">
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="logo">Mon<span>Estim</span></div>
+    <div class="header-badge">Résultats</div>
+  </header>
+  <main>
+    <div class="result-wrap">
+
+      <div id="state-loading" style="text-align:center; padding:80px 20px;">
+        <div style="font-size:36px; margin-bottom:16px;">⏳</div>
+        <p style="color:var(--text-muted);">Chargement de votre estimation…</p>
+      </div>
+
+      <div id="state-error" style="display:none; text-align:center; padding:60px 20px;">
+        <div style="font-size:48px; margin-bottom:20px;">🔗</div>
+        <h2 style="font-family:'Cormorant Garamond',serif; font-size:28px; font-weight:300; margin-bottom:12px;">Lien invalide ou expiré</h2>
+        <p style="color:var(--text-muted); margin-bottom:28px; line-height:1.6;">
+          Les données de votre estimation n'ont pas pu être récupérées.
+        </p>
+        <a href="https://www.mon-estim.fr/" class="btn-primary" style="text-decoration:none; display:inline-flex;">Refaire l'estimation →</a>
+      </div>
+
+      <!-- Résultats Essentielle -->
+      <div id="state-basic" style="display:none;">
+        <div class="result-gold-card">
+          <p style="font-size:11px; letter-spacing:.2em; text-transform:uppercase; color:var(--gold); margin-bottom:12px;">✦ Votre estimation</p>
+          <h1 style="font-family:'Cormorant Garamond',serif; font-size:clamp(20px,3vw,28px); font-weight:300; margin-bottom:24px; color:var(--text-muted);" id="result-ville">Votre bien</h1>
+          <div class="result-price-main" id="result-price-main">— €</div>
+          <p style="font-size:14px; color:var(--text-muted); margin-top:12px;" id="result-band">Fourchette : — € – — €</p>
+        </div>
+        <div class="result-grid">
+          <div class="result-stat">
+            <div class="result-stat-label">Fourchette basse</div>
+            <div class="result-stat-val" id="result-low">—</div>
+          </div>
+          <div class="result-stat">
+            <div class="result-stat-label">Fourchette haute</div>
+            <div class="result-stat-val" id="result-high">—</div>
+          </div>
+          <div class="result-stat" style="grid-column:1/-1;">
+            <div class="result-stat-label">Prix au m²</div>
+            <div class="result-stat-val" id="result-m2">—</div>
+          </div>
+        </div>
+        <div style="background:var(--dark-2); border:1px solid var(--border); border-radius:12px; padding:18px 22px; text-align:center; margin-bottom:32px;">
+          <p style="font-size:12px; color:var(--text-muted); opacity:.7;">Sources : DVF — DGFiP · Ventes notariées 2020–2025</p>
+        </div>
+        <div style="background:linear-gradient(135deg,rgba(201,168,76,.06),rgba(201,168,76,.01)); border:1px solid rgba(201,168,76,.3); border-radius:16px; padding:28px; text-align:center;">
+          <p style="font-size:11px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--gold); margin-bottom:12px;">✦ Envie d'aller plus loin ?</p>
+          <p style="font-family:'Cormorant Garamond',serif; font-size:20px; font-weight:300; margin-bottom:8px; line-height:1.4;">
+            Scoring détaillé, leviers de valorisation<br>et rapport PDF — pour 5 € de plus
+          </p>
+          <a href="REMPLACER_URL_BON_COMMANDE_PREMIUM" class="btn-primary" style="text-decoration:none; display:inline-flex; justify-content:center; margin-top:16px;">
+            Passer à l'Analyse Complète — 14,90 € →
+          </a>
+        </div>
+      </div>
+
+      <!-- Résultats Complète -->
+      <div id="state-premium" style="display:none; text-align:center; padding:20px 0;">
+        <div style="font-size:64px; margin-bottom:20px;">📄</div>
+        <p style="font-size:11px; letter-spacing:.2em; text-transform:uppercase; color:var(--gold); margin-bottom:12px;">✦ Analyse Complète</p>
+        <h1 style="font-family:'Cormorant Garamond',serif; font-size:clamp(26px,4vw,38px); font-weight:300; line-height:1.2; margin-bottom:16px;">
+          Votre rapport est <em>prêt</em>.
+        </h1>
+        <p style="font-size:15px; color:var(--text-muted); max-width:420px; margin:0 auto 32px; line-height:1.7;">
+          Estimation complète avec scoring 7 dimensions, leviers de valorisation et stratégie de prix.
+        </p>
+        <div style="display:flex; gap:24px; justify-content:center; flex-wrap:wrap; margin-bottom:36px;">
+          <div>
+            <div class="result-price-main" id="premium-price" style="font-size:clamp(36px,6vw,52px);">— €</div>
+            <div style="font-size:12px; color:var(--text-muted); margin-top:6px;">Valeur estimée</div>
+          </div>
+          <div style="width:1px; background:var(--border);"></div>
+          <div>
+            <div style="font-family:'Cormorant Garamond',serif; font-size:clamp(36px,6vw,52px); font-weight:300;
+              background:linear-gradient(135deg,#B8960C,#E8C97A,#C9A84C); -webkit-background-clip:text;
+              -webkit-text-fill-color:transparent; background-clip:text;" id="premium-score">—</div>
+            <div style="font-size:12px; color:var(--text-muted); margin-top:6px;">Score / 100</div>
+          </div>
+        </div>
+        <button onclick="downloadPDF()" class="btn-primary" id="btn-pdf" style="font-size:16px; padding:20px 52px; margin:0 auto;">
+          📥 Télécharger mon rapport PDF →
+        </button>
+        <p style="font-size:12px; color:var(--text-muted); margin-top:14px;">🔒 Rapport généré sur votre appareil · Aucune donnée transmise</p>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script>
+var hasPremium = true;
+var answers    = new Array(100).fill(null);
+var questions  = [];
+var lastScores = null;
+var lastPrix   = null;
+function renderLeviersInline() {}
+function scoreColor(s) { return s >= 70 ? '#4CAF7D' : s >= 45 ? '#C9A84C' : '#E05252'; }
+
+var _scores = null;
+var _prix   = null;
+var _offer  = null;
+
+function fmtEur(v) {
+  return new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(v);
+}
+
+function loadResults() {
+  // Cherche aussi dans le hash si Systeme.io transforme les query params
+  var params = new URLSearchParams(window.location.search || window.location.hash.replace('#','?'));
+  var raw = params.get('d') || sessionStorage.getItem('monestim_payload') || '';
+  if (!raw) {
+    document.getElementById('state-loading').style.display = 'none';
+    document.getElementById('state-error').style.display   = 'block';
+    return;
+  }
+  try {
+    var payload = JSON.parse(decodeURIComponent(escape(atob(raw))));
+    _scores = payload.scores;
+    _prix   = payload.prix;
+    _offer  = payload.offer || 'basic';
+    lastScores = _scores;
+    lastPrix   = _prix;
+    if (payload.answers) answers = payload.answers;
+    sessionStorage.setItem('monestim_payload', raw);
+    document.getElementById('state-loading').style.display = 'none';
+    _offer === 'premium' ? showPremium() : showBasic();
+  } catch(e) {
+    document.getElementById('state-loading').style.display = 'none';
+    document.getElementById('state-error').style.display   = 'block';
+  }
+}
+
+function showBasic() {
+  document.getElementById('state-basic').style.display   = 'block';
+  var p = _prix;
+  document.getElementById('result-ville').textContent      = p.ville ? 'Bien à ' + p.ville : 'Votre bien';
+  document.getElementById('result-price-main').textContent = fmtEur(p.totalValue);
+  document.getElementById('result-band').textContent       = 'Fourchette : ' + fmtEur(p.low) + ' – ' + fmtEur(p.high);
+  document.getElementById('result-low').textContent        = fmtEur(p.low);
+  document.getElementById('result-high').textContent       = fmtEur(p.high);
+  document.getElementById('result-m2').textContent         = fmtEur(p.finalPriceM2) + ' / m²';
+}
+
+function showPremium() {
+  document.getElementById('state-premium').style.display = 'block';
+  document.getElementById('premium-price').textContent   = fmtEur(_prix.totalValue);
+  document.getElementById('premium-score').textContent   = (_scores && _scores.global ? _scores.global : '—') + ' / 100';
+}
+
+async function downloadPDF() {
+  var btn = document.getElementById('btn-pdf');
+  btn.textContent = '⏳ Génération en cours…';
+  btn.disabled = true;
+  try {
+    // generatePDF() utilise les variables globales lastScores et lastPrix
+    hasPremium = true;
+    lastScores = _scores;
+    lastPrix   = _prix;
+    await generatePDF();
+    btn.textContent = '✅ PDF téléchargé !';
+    setTimeout(function() { btn.textContent = '📥 Télécharger à nouveau'; btn.disabled = false; }, 3000);
+  } catch(e) {
+    console.error('PDF error:', e);
+    btn.textContent = '❌ Erreur — réessayer';
+    btn.disabled = false;
+  }
+}
+
+loadResults();
+</script>
+</body>
+</html>
