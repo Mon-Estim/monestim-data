@@ -208,37 +208,23 @@ loadResults();
 </script>
 
 <script>
-// ── Hauteur dynamique iframe → Systeme.io ──
+// ── Hauteur dynamique iframe ──
 (function() {
   function sendHeight() {
-    // Prend la hauteur max entre scrollHeight et offsetHeight
-    var h = Math.max(
-      document.body.scrollHeight,
-      document.body.offsetHeight,
-      document.documentElement.scrollHeight,
-      document.documentElement.offsetHeight
-    );
+    var app = document.querySelector('.app') || document.querySelector('main') || document.body;
+    var h = app.offsetHeight;
     window.parent.postMessage({ type: 'monestim-height', height: h }, '*');
   }
-  // Attend que tout soit rendu
-  if (document.readyState === 'complete') {
-    setTimeout(sendHeight, 300);
-  } else {
-    window.addEventListener('load', function() { setTimeout(sendHeight, 300); });
-  }
-  // Réévalue à chaque resize
-  window.addEventListener('resize', sendHeight);
-  // Réévalue à chaque changement DOM (ex: question suivante)
-  if (window.MutationObserver) {
-    new MutationObserver(function() { setTimeout(sendHeight, 100); })
-      .observe(document.body, { childList: true, subtree: true });
-  }
-  // Sécurité : réévalue toutes les 2s pendant 20s au cas où
-  var count = 0;
-  var interval = setInterval(function() {
+  window.addEventListener('load', function() {
     sendHeight();
-    if (++count >= 10) clearInterval(interval);
-  }, 2000);
+    setTimeout(sendHeight, 500);
+    setTimeout(sendHeight, 1500);
+  });
+  window.addEventListener('resize', sendHeight);
+  if (window.MutationObserver) {
+    new MutationObserver(function() { setTimeout(sendHeight, 150); })
+      .observe(document.querySelector('.app') || document.body, { childList: true, subtree: true });
+  }
 })();
 </script>
 </body>
