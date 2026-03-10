@@ -211,17 +211,34 @@ loadResults();
 // ── Hauteur dynamique iframe → Systeme.io ──
 (function() {
   function sendHeight() {
-    var h = document.documentElement.scrollHeight || document.body.scrollHeight;
+    // Prend la hauteur max entre scrollHeight et offsetHeight
+    var h = Math.max(
+      document.body.scrollHeight,
+      document.body.offsetHeight,
+      document.documentElement.scrollHeight,
+      document.documentElement.offsetHeight
+    );
     window.parent.postMessage({ type: 'monestim-height', height: h }, '*');
   }
-  // Envoie dès le chargement
-  sendHeight();
-  // Réévalue à chaque resize et mutation DOM
-  window.addEventListener('resize', sendHeight);
-  if (window.MutationObserver) {
-    new MutationObserver(sendHeight).observe(document.body, { childList: true, subtree: true, attributes: true });
+  // Attend que tout soit rendu
+  if (document.readyState === 'complete') {
+    setTimeout(sendHeight, 300);
+  } else {
+    window.addEventListener('load', function() { setTimeout(sendHeight, 300); });
   }
-  setInterval(sendHeight, 1000);
+  // Réévalue à chaque resize
+  window.addEventListener('resize', sendHeight);
+  // Réévalue à chaque changement DOM (ex: question suivante)
+  if (window.MutationObserver) {
+    new MutationObserver(function() { setTimeout(sendHeight, 100); })
+      .observe(document.body, { childList: true, subtree: true });
+  }
+  // Sécurité : réévalue toutes les 2s pendant 20s au cas où
+  var count = 0;
+  var interval = setInterval(function() {
+    sendHeight();
+    if (++count >= 10) clearInterval(interval);
+  }, 2000);
 })();
 </script>
 </body>
