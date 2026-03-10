@@ -1,0 +1,43 @@
+<!-- 
+  INSTRUCTIONS :
+  1. Dans Systeme.io, ajoute un bloc "Code HTML" sur chaque page qui contient un iframe MonEstim
+  2. Colle le code ci-dessous dans ce bloc
+  3. Remplace l'iframe existant par celui indiqué
+
+  PAGE 1 — Questionnaire :
+  <iframe id="monestim-frame" src="https://mon-estim.github.io/monestim-data/index.html" 
+    style="width:100%;border:none;display:block;min-height:600px;" scrolling="no"></iframe>
+
+  PAGE BON DE COMMANDE — Paiement :
+  <iframe id="monestim-frame" src="https://mon-estim.github.io/monestim-data/paiement.html" 
+    style="width:100%;border:none;display:block;min-height:600px;" scrolling="no"></iframe>
+
+  PAGE REMERCIEMENT — Résultats :
+  <iframe id="monestim-frame" src="https://mon-estim.github.io/monestim-data/resultats.html" 
+    style="width:100%;border:none;display:block;min-height:600px;" scrolling="no"></iframe>
+-->
+
+<style>
+  /* Supprime les marges Systeme.io autour de l'iframe */
+  body, .container, .page-content, .section, .row, .col {
+    margin: 0 !important;
+    padding: 0 !important;
+    max-width: 100% !important;
+  }
+  #monestim-frame {
+    width: 100% !important;
+    display: block !important;
+    border: none !important;
+  }
+</style>
+
+<script>
+  window.addEventListener('message', function(e) {
+    if (e.data && e.data.type === 'monestim-height') {
+      var frame = document.getElementById('monestim-frame');
+      if (frame) {
+        frame.style.height = (e.data.height + 20) + 'px';
+      }
+    }
+  });
+</script>

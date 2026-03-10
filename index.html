@@ -6,6 +6,13 @@
 <title>MonEstim — Estimez votre bien</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
+
+  /* ── Reset marges iframe ── */
+  html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow-x: hidden;
+  }
   :root {
     --gold: #C9A84C;
     --gold-light: #E8C97A;
@@ -4542,6 +4549,24 @@ function activatePremium() { upgradeAndProceed(); }
 function upgradeToFull()   { upgradeAndProceed(); }
 
 loadData();
+</script>
+
+<script>
+// ── Hauteur dynamique iframe → Systeme.io ──
+(function() {
+  function sendHeight() {
+    var h = document.documentElement.scrollHeight || document.body.scrollHeight;
+    window.parent.postMessage({ type: 'monestim-height', height: h }, '*');
+  }
+  // Envoie dès le chargement
+  sendHeight();
+  // Réévalue à chaque resize et mutation DOM
+  window.addEventListener('resize', sendHeight);
+  if (window.MutationObserver) {
+    new MutationObserver(sendHeight).observe(document.body, { childList: true, subtree: true, attributes: true });
+  }
+  setInterval(sendHeight, 1000);
+})();
 </script>
 </body>
 </html>

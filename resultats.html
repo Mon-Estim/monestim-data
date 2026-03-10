@@ -7,7 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <!-- Code scoring + PDF chargé depuis Netlify -->
-<script src="https://mon-estim.github.io/monestim-data/monestim-results.js"></script>
+<script src="https://mon-estim.github.io/monestim-data/monestim-results.js?v=2"></script>
 <link rel="stylesheet" href="https://mon-estim.github.io/monestim-data/monestim-styles.css">
 </head>
 <body>
@@ -205,6 +205,24 @@ async function downloadPDF() {
 }
 
 loadResults();
+</script>
+
+<script>
+// ── Hauteur dynamique iframe → Systeme.io ──
+(function() {
+  function sendHeight() {
+    var h = document.documentElement.scrollHeight || document.body.scrollHeight;
+    window.parent.postMessage({ type: 'monestim-height', height: h }, '*');
+  }
+  // Envoie dès le chargement
+  sendHeight();
+  // Réévalue à chaque resize et mutation DOM
+  window.addEventListener('resize', sendHeight);
+  if (window.MutationObserver) {
+    new MutationObserver(sendHeight).observe(document.body, { childList: true, subtree: true, attributes: true });
+  }
+  setInterval(sendHeight, 1000);
+})();
 </script>
 </body>
 </html>
