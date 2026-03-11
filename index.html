@@ -2342,7 +2342,7 @@ const questions = [
   ]},
 
   // ── ⚖️ JURIDIQUE & FISCALITÉ (Q59–Q64) ──────────────────
-  { section:"⚖️ Juridique & Fiscalité", text:"Régime juridique du bien ?", hint:"", type:"options", cols:2, options:[
+  { section:"⚖️ Juridique & Fiscalité", text:"Régime juridique du bien ?", hint:"", showIf:"appart", type:"options", cols:2, options:[
     {icon:"🏡",label:"Propriété individuelle pleine — aucune copropriété", val:1.05},
     {icon:"🏢",label:"Copropriété saine — comptes équilibrés, syndic professionnel", val:1.0},
     {icon:"⚠️",label:"Copropriété avec travaux importants à venir", val:0.90},
@@ -4358,40 +4358,19 @@ async function generatePDF() {
 }
 
 // PAYMENT
-function openPayment(context) {
-  const labels = {
-    basic:  { name: 'Estimation Essentielle', price: '9,90 €' },
-    result: { name: 'Analyse Complète',        price: '14,90 €' },
-  };
-  const l = labels[context] || labels['basic'];
-  document.getElementById('modal-product-name').textContent = `${l.name} — ${l.price}`;
-  document.getElementById('paymentModal').classList.add('open');
-}
-
-function closePayment() {
-  document.getElementById('paymentModal').classList.remove('open');
-}
-
-function unlockPremium() {
-  openPayment('result');
-}
-
-function simulatePurchase() {
-  const context = document.getElementById('modal-product-name').textContent;
-  const isUpgrade = context.includes('29,90');
-
-  if (isUpgrade && lastScores) {
-    // Upgrade depuis la page résultat (offre basique → complète)
-    activatePremium();
-    return;
+function proceedToPayment() {
+  var payload = sessionStorage.getItem('monestim_payload');
+  if (!payload) {
+    payload = buildPayload(selectedOffer || 'basic');
+    sessionStorage.setItem('monestim_payload', payload);
   }
-
-  // Paiement initial — débloquer et afficher les résultats
-  hasPremium = (selectedOffer === 'premium') || isUpgrade;
-  closePayment();
-  // Appel direct à showResults (questionnaire déjà complété)
-  _renderResults();
+  var url = (selectedOffer === 'premium') ? PAGE_PAIEMENT_PREMIUM : PAGE_PAIEMENT_BASIC;
+  window.location.href = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'd=' + encodeURIComponent(payload);
 }
+
+function openPayment(context) { proceedToPayment(); }
+function closePayment()       {}
+function simulatePurchase()   { proceedToPayment(); }
 
 function renderLeviersInline() {
   if (!lastScores) return;
@@ -4495,12 +4474,6 @@ function proceedToPayment() {
   var url = (selectedOffer === 'premium') ? PAGE_PAIEMENT_PREMIUM : PAGE_PAIEMENT_BASIC;
   window.location.href = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'd=' + encodeURIComponent(payload);
 }
-
-function openPayment()     { proceedToPayment(); }
-function closePayment()    {}
-function generateDemoPDF() {}
-function activatePremium() { upgradeAndProceed(); }
-function upgradeToFull()   { upgradeAndProceed(); }
 
 loadData();
 </script>
