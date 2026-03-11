@@ -35,12 +35,14 @@
 
       <!-- Résultats Essentielle -->
       <div id="state-basic" style="display:none;">
+
         <div class="result-gold-card">
           <p style="font-size:11px; letter-spacing:.2em; text-transform:uppercase; color:var(--gold); margin-bottom:12px;">✦ Votre estimation</p>
-          <h1 style="font-family:'Cormorant Garamond',serif; font-size:clamp(20px,3vw,28px); font-weight:300; margin-bottom:24px; color:var(--text-muted);" id="result-ville">Votre bien</h1>
+          <h1 style="font-family:'Cormorant Garamond',serif; font-size:clamp(16px,2.5vw,22px); font-weight:300; margin-bottom:20px; color:var(--text-muted);" id="result-ville">Votre bien</h1>
           <div class="result-price-main" id="result-price-main">— €</div>
-          <p style="font-size:14px; color:var(--text-muted); margin-top:12px;" id="result-band">Fourchette : — € – — €</p>
+          <p style="font-size:13px; color:var(--text-muted); margin-top:10px;" id="result-band">Fourchette : — € – — €</p>
         </div>
+
         <div class="result-grid">
           <div class="result-stat">
             <div class="result-stat-label">Fourchette basse</div>
@@ -50,56 +52,105 @@
             <div class="result-stat-label">Fourchette haute</div>
             <div class="result-stat-val" id="result-high">—</div>
           </div>
-          <div class="result-stat" style="grid-column:1/-1;">
+          <div class="result-stat">
             <div class="result-stat-label">Prix au m²</div>
             <div class="result-stat-val" id="result-m2">—</div>
           </div>
+          <div class="result-stat">
+            <div class="result-stat-label">Délai de vente estimé</div>
+            <div class="result-stat-val" id="result-delai" style="font-size:clamp(14px,2vw,18px);">—</div>
+          </div>
         </div>
-        <div style="background:var(--dark-2); border:1px solid var(--border); border-radius:12px; padding:18px 22px; text-align:center; margin-bottom:32px;">
-          <p style="font-size:12px; color:var(--text-muted); opacity:.7;">Sources : DVF — DGFiP · Ventes notariées 2020–2025</p>
+
+        <div style="background:var(--dark-2); border:1px solid var(--border); border-radius:16px; padding:24px; text-align:center; margin-bottom:16px;">
+          <p style="font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--gold); margin-bottom:8px;">Score global de votre bien</p>
+          <div style="font-family:'Cormorant Garamond',serif; font-size:clamp(42px,7vw,64px); font-weight:300;
+            background:linear-gradient(135deg,#B8960C,#E8C97A,#C9A84C);
+            -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+            line-height:1;" id="result-score-basic">—</div>
+          <p style="font-size:12px; color:var(--text-muted); margin-top:6px;">/100 — basé sur 70 critères</p>
+          <div style="margin-top:14px; height:6px; background:var(--dark-3); border-radius:3px; overflow:hidden;">
+            <div id="result-score-bar" style="height:100%; width:0%; background:linear-gradient(90deg,#B8960C,#E8C97A); border-radius:3px; transition:width 1s ease;"></div>
+          </div>
         </div>
+
+        <div style="background:var(--dark-2); border:1px solid var(--border); border-radius:12px; padding:14px 18px; text-align:center; margin-bottom:24px;">
+          <p style="font-size:11px; color:var(--text-muted); opacity:.7;">Sources : DVF — DGFiP · Ventes notariées 2020–2025</p>
+        </div>
+
         <div style="background:linear-gradient(135deg,rgba(201,168,76,.06),rgba(201,168,76,.01)); border:1px solid rgba(201,168,76,.3); border-radius:16px; padding:28px; text-align:center;">
           <p style="font-size:11px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--gold); margin-bottom:12px;">✦ Envie d'aller plus loin ?</p>
           <p style="font-family:'Cormorant Garamond',serif; font-size:20px; font-weight:300; margin-bottom:8px; line-height:1.4;">
-            Scoring détaillé, leviers de valorisation<br>et rapport PDF — pour 5 € de plus
+            Scoring détaillé 7 dimensions, leviers de valorisation<br>et rapport PDF 7 pages — pour 5 € de plus
           </p>
           <a href="REMPLACER_URL_BON_COMMANDE_PREMIUM" class="btn-primary" style="text-decoration:none; display:inline-flex; justify-content:center; margin-top:16px;">
             Passer à l'Analyse Complète — 14,90 € →
           </a>
         </div>
+
       </div>
 
       <!-- Résultats Complète -->
-      <div id="state-premium" style="display:none; text-align:center; padding:20px 0;">
-        <div style="font-size:64px; margin-bottom:20px;">📄</div>
-        <p style="font-size:11px; letter-spacing:.2em; text-transform:uppercase; color:var(--gold); margin-bottom:12px;">✦ Analyse Complète</p>
-        <h1 style="font-family:'Cormorant Garamond',serif; font-size:clamp(26px,4vw,38px); font-weight:300; line-height:1.2; margin-bottom:16px;">
-          Votre rapport est <em>prêt</em>.
-        </h1>
-        <p style="font-size:15px; color:var(--text-muted); max-width:420px; margin:0 auto 32px; line-height:1.7;">
-          Estimation complète avec scoring 7 dimensions, leviers de valorisation et stratégie de prix.
-        </p>
-        <div style="display:flex; gap:24px; justify-content:center; flex-wrap:wrap; margin-bottom:36px;">
-          <div>
-            <div class="result-price-main" id="premium-price" style="font-size:clamp(36px,6vw,52px);">— €</div>
-            <div style="font-size:12px; color:var(--text-muted); margin-top:6px;">Valeur estimée</div>
+      <div id="state-premium" style="display:none;">
+
+        <div class="result-gold-card">
+          <p style="font-size:11px; letter-spacing:.2em; text-transform:uppercase; color:var(--gold); margin-bottom:12px;">✦ Analyse Complète</p>
+          <h1 style="font-family:'Cormorant Garamond',serif; font-size:clamp(16px,2.5vw,22px); font-weight:300; margin-bottom:20px; color:var(--text-muted);" id="premium-ville">Votre bien</h1>
+          <div class="result-price-main" id="premium-price">— €</div>
+          <p style="font-size:13px; color:var(--text-muted); margin-top:10px;" id="premium-band">Fourchette : — € – — €</p>
+        </div>
+
+        <div class="result-grid">
+          <div class="result-stat">
+            <div class="result-stat-label">Fourchette basse</div>
+            <div class="result-stat-val" id="premium-low">—</div>
           </div>
-          <div style="width:1px; background:var(--border);"></div>
-          <div>
-            <div style="font-family:'Cormorant Garamond',serif; font-size:clamp(36px,6vw,52px); font-weight:300;
-              background:linear-gradient(135deg,#B8960C,#E8C97A,#C9A84C); -webkit-background-clip:text;
-              -webkit-text-fill-color:transparent; background-clip:text;" id="premium-score">—</div>
-            <div style="font-size:12px; color:var(--text-muted); margin-top:6px;">Score / 100</div>
+          <div class="result-stat">
+            <div class="result-stat-label">Fourchette haute</div>
+            <div class="result-stat-val" id="premium-high">—</div>
+          </div>
+          <div class="result-stat">
+            <div class="result-stat-label">Prix au m²</div>
+            <div class="result-stat-val" id="premium-m2">—</div>
+          </div>
+          <div class="result-stat">
+            <div class="result-stat-label">Délai de vente estimé</div>
+            <div class="result-stat-val" id="premium-delai" style="font-size:clamp(14px,2vw,18px);">—</div>
           </div>
         </div>
-        <button onclick="downloadPDF()" class="btn-primary" id="btn-pdf" style="font-size:16px; padding:20px 52px; margin:0 auto;">
-          📥 Télécharger mon rapport PDF →
-        </button>
-        <p style="font-size:12px; color:var(--text-muted); margin-top:14px;">🔒 Rapport généré sur votre appareil · Aucune donnée transmise</p>
+
+        <div style="background:var(--dark-2); border:1px solid var(--border); border-radius:16px; padding:24px; text-align:center; margin-bottom:16px;">
+          <p style="font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--gold); margin-bottom:8px;">Score global de votre bien</p>
+          <div style="font-family:'Cormorant Garamond',serif; font-size:clamp(42px,7vw,64px); font-weight:300;
+            background:linear-gradient(135deg,#B8960C,#E8C97A,#C9A84C);
+            -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+            line-height:1;" id="premium-score">—</div>
+          <p style="font-size:12px; color:var(--text-muted); margin-top:6px;">/100 — basé sur 70 critères</p>
+          <div style="margin-top:14px; height:6px; background:var(--dark-3); border-radius:3px; overflow:hidden;">
+            <div id="premium-score-bar" style="height:100%; width:0%; background:linear-gradient(90deg,#B8960C,#E8C97A); border-radius:3px; transition:width 1s ease;"></div>
+          </div>
+        </div>
+
+        <div id="premium-strategie" style="background:var(--dark-2); border:1px solid var(--border); border-radius:16px; padding:20px 24px; margin-bottom:16px; display:none;">
+          <p style="font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--gold); margin-bottom:8px;">Stratégie de prix selon votre urgence</p>
+          <div style="font-family:'Cormorant Garamond',serif; font-size:clamp(22px,3vw,30px); font-weight:300;" id="premium-prix-strat">—</div>
+          <p style="font-size:12px; color:var(--text-muted); margin-top:6px;" id="premium-conseil-strat"></p>
+        </div>
+
+        <div style="background:var(--dark-2); border:1px solid var(--border); border-radius:12px; padding:14px 18px; text-align:center; margin-bottom:24px;">
+          <p style="font-size:11px; color:var(--text-muted); opacity:.7;">Sources : DVF — DGFiP · Ventes notariées 2020–2025</p>
+        </div>
+
+        <div style="text-align:center; padding:8px 0 24px;">
+          <button onclick="downloadPDF()" class="btn-primary" id="btn-pdf" style="font-size:16px; padding:20px 52px; margin:0 auto;">
+            Télécharger mon rapport PDF 7 pages →
+          </button>
+          <p style="font-size:12px; color:var(--text-muted); margin-top:14px;">Rapport généré sur votre appareil · Aucune donnée transmise</p>
+        </div>
+
       </div>
 
-    </div>
-  </main>
+    </main>
 </div>
 
 <script>
@@ -138,9 +189,12 @@ function fmtEur(v) {
 }
 
 function loadResults() {
-  // Cherche aussi dans le hash si Systeme.io transforme les query params
-  var params = new URLSearchParams(window.location.search || window.location.hash.replace('#','?'));
-  var raw = params.get('d') || sessionStorage.getItem('monestim_payload') || '';
+  // Lit ?d= dans query string ET #d= dans le hash (envoyé par relay.html après Stripe)
+  var paramsQ = new URLSearchParams(window.location.search);
+  var paramsH = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+  var raw = paramsQ.get('d') || paramsH.get('d') || sessionStorage.getItem('monestim_payload') || '';
+  // Fallback : localStorage
+  if (!raw) { try { raw = localStorage.getItem('monestim_payload') || ''; } catch(e) {} }
   if (!raw) {
     document.getElementById('state-loading').style.display = 'none';
     document.getElementById('state-error').style.display   = 'block';
@@ -155,6 +209,7 @@ function loadResults() {
     lastPrix   = _prix;
     if (payload.answers) answers = payload.answers;
     sessionStorage.setItem('monestim_payload', raw);
+    try { localStorage.removeItem('monestim_payload'); } catch(e) {} // nettoyage après parse réussi
     document.getElementById('state-loading').style.display = 'none';
     _offer === 'premium' ? showPremium() : showBasic();
   } catch(e) {
@@ -164,7 +219,7 @@ function loadResults() {
 }
 
 function showBasic() {
-  document.getElementById('state-basic').style.display   = 'block';
+  document.getElementById('state-basic').style.display = 'block';
   var p = _prix;
   document.getElementById('result-ville').textContent      = p.ville ? 'Bien à ' + p.ville : 'Votre bien';
   document.getElementById('result-price-main').textContent = fmtEur(p.totalValue);
@@ -172,12 +227,41 @@ function showBasic() {
   document.getElementById('result-low').textContent        = fmtEur(p.low);
   document.getElementById('result-high').textContent       = fmtEur(p.high);
   document.getElementById('result-m2').textContent         = fmtEur(p.finalPriceM2) + ' / m²';
+  document.getElementById('result-delai').textContent      = p.delai || '3 à 5 mois';
+  // Score global
+  var score = _scores && _scores.global ? _scores.global : null;
+  if (score) {
+    document.getElementById('result-score-basic').textContent = score;
+    setTimeout(function() {
+      document.getElementById('result-score-bar').style.width = score + '%';
+    }, 200);
+  }
 }
 
 function showPremium() {
   document.getElementById('state-premium').style.display = 'block';
-  document.getElementById('premium-price').textContent   = fmtEur(_prix.totalValue);
-  document.getElementById('premium-score').textContent   = (_scores && _scores.global ? _scores.global : '—') + ' / 100';
+  var p = _prix;
+  document.getElementById('premium-ville').textContent = p.ville ? 'Bien à ' + p.ville : 'Votre bien';
+  document.getElementById('premium-price').textContent = fmtEur(p.totalValue);
+  document.getElementById('premium-band').textContent  = 'Fourchette : ' + fmtEur(p.low) + ' – ' + fmtEur(p.high);
+  document.getElementById('premium-low').textContent   = fmtEur(p.low);
+  document.getElementById('premium-high').textContent  = fmtEur(p.high);
+  document.getElementById('premium-m2').textContent    = fmtEur(p.finalPriceM2) + ' / m²';
+  document.getElementById('premium-delai').textContent = p.delai || '3 à 5 mois';
+  // Score global
+  var score = _scores && _scores.global ? _scores.global : null;
+  if (score) {
+    document.getElementById('premium-score').textContent = score;
+    setTimeout(function() {
+      document.getElementById('premium-score-bar').style.width = score + '%';
+    }, 200);
+  }
+  // Stratégie de prix
+  if (p.urgenceData && p.prixStrategique) {
+    document.getElementById('premium-strategie').style.display = 'block';
+    document.getElementById('premium-prix-strat').textContent  = fmtEur(p.prixStrategique) + ' — ' + (p.urgenceData.label || '');
+    document.getElementById('premium-conseil-strat').textContent = p.urgenceData.conseil || '';
+  }
 }
 
 async function downloadPDF() {
