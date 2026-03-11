@@ -397,14 +397,20 @@ function selectOffer(offer) {
 
 function goToPayment(offer) {
   var payload = sessionStorage.getItem('monestim_payload') || '';
-  var baseUrl = offer === 'premium' ? STRIPE_PREMIUM : STRIPE_BASIC;
-  // Passe le payload en client_reference_id via URL si possible
-  var url = baseUrl;
+  // Injecte l'offre choisie dans le payload
   if (payload) {
-    // Stripe Payment Links acceptent ?client_reference_id=
-    url += (url.indexOf('?') >= 0 ? '&' : '?') + 'client_reference_id=' + encodeURIComponent(payload.substring(0, 200));
+    try {
+      var data = JSON.parse(decodeURIComponent(escape(atob(payload))));
+      data.offer = offer;
+      payload = btoa(unescape(encodeURIComponent(JSON.stringify(data))));
+    } catch(e) {}
   }
-  window.location.href = url;
+  // Stocke dans localStorage (domaine GitHub) pour que resultats.html le récupère
+  if (payload) {
+    try { localStorage.setItem('monestim_payload', payload); } catch(e) {}
+  }
+  var baseUrl = offer === 'premium' ? STRIPE_PREMIUM : STRIPE_BASIC;
+  window.top.location.href = baseUrl;
 }
 </script>
 
