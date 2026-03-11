@@ -45,7 +45,7 @@
     } catch(e) {}
     try { localStorage.removeItem('monestim_payload'); } catch(e) {}
     // Redirige vers Systeme.io avec payload dans le hash
-    window.location.href = 'https://www.mon-estim.fr/votre-estimation#d=' + encodeURIComponent(stored);
+    window.location.href = 'https://mon-estim.github.io/monestim-data/resultats.html?d=' + encodeURIComponent(stored);
   } else {
     // Pas de payload — redirige quand même avec offer pour debug
     window.location.href = 'https://www.mon-estim.fr/votre-estimation#lost=1&offer=' + offer;
