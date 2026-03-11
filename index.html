@@ -2526,7 +2526,7 @@ function startQuizWithOffer() {
 
 // Q9 = type de bien (index 9) : 0=maison, 1=appart, 2=mitoyenne, 3=loft
 function getBienType() {
-  const v = answers[9];
+  const v = answers[8];
   if (v === null) return null;
   if (v === 0 || v === 2) return 'maison';
   if (v === 1) return 'appart';
@@ -2590,7 +2590,7 @@ function getSectionCard(sectionName) {
   const regionLabel= regionIdx !== null && regionOpts ? regionOpts[regionIdx].label : null;
   const regionVal  = regionIdx !== null && regionOpts ? regionOpts[regionIdx].val  : null;
 
-  const typeIdx    = answers[9];
+  const typeIdx    = answers[8];
   const typeLabels = ['Maison individuelle','Appartement','Maison mitoyenne','Loft / atypique'];
   const typeLabel  = typeIdx !== null ? typeLabels[typeIdx] : null;
 
@@ -3401,26 +3401,26 @@ function avgScore(indices) {
 }
 
 function computeScores() {
-  // Q0-Q8 : Localisation
-  const scoreLocalisation = avgScore([0,1,2,3,4,5,6,7,8]);
+  // Q0-Q7 : Localisation (Q8 = type de bien, exclu)
+  const scoreLocalisation = avgScore([0,1,2,3,4,5,6,7]);
 
-  // Q18-Q30 : État & Travaux (indices nouveaux)
-  const scoreEtat = avgScore([24,25,26,27,28,29,30,31,32,33,34,35]);
+  // Q26-Q37 : État & Travaux
+  const scoreEtat = avgScore([26,27,28,29,30,31,32,33,34,35,36,37]);
 
-  // Q36-Q42 : Énergie
-  const scoreEnergie = avgScore([36,37,38,39,40,41,42]);
+  // Q38-Q43 : Énergie & DPE
+  const scoreEnergie = avgScore([38,39,40,41,42,43]);
 
-  // Q43-Q47 : Copropriété (appart) ou Terrain (maison)
-  const scoreCopro = avgScore([43,44,45,46,47]);
+  // Q44-Q48 : Copropriété / Terrain
+  const scoreCopro = avgScore([44,45,46,47,48]);
 
-  // Q48-Q53 : Standing & Finitions
-  const scoreStanding = avgScore([48,49,50,51,52,53]);
+  // Q49-Q54 : Standing & Finitions
+  const scoreStanding = avgScore([49,50,51,52,53,54]);
 
-  // Q65-Q70 : Marché
-  const scoreMarche = avgScore([65,66,67,68,69,70]);
+  // Q66-Q70 : Marché & Contexte
+  const scoreMarche = avgScore([66,67,68,69,70]);
 
-  // Q59-Q64 : Juridique
-  const scoreJuridique = avgScore([59,60,61,62,63,64]);
+  // Q60-Q65 : Juridique & Fiscalité
+  const scoreJuridique = avgScore([60,61,62,63,64,65]);
 
   // Score global pondéré
   const global = Math.round(
@@ -3466,8 +3466,8 @@ function showResults() {
 function _calculateScores() {
   const scores = computeScores();
   lastScores = scores;
-  const surface = (answers[10] !== null) ? answers[10] : 85;
-  const typeBienIdx = answers[9] ?? 0;
+  const surface = (answers[13] !== null) ? answers[13] : 85;
+  const typeBienIdx = answers[8] ?? 0;
   const typeBien = (typeBienIdx === 1) ? 'appart' : 'maison';
   const cityInput = document.getElementById('city-input')?.value || '';
   const prices = getCityPrices(cityInput, typeBien);
@@ -3479,7 +3479,7 @@ function _calculateScores() {
   const locCoef      = 0.90 + (scores.localisation / 100) * 0.20;
   const energieCoef  = 0.97 + (scores.energie / 100) * 0.06;
   const standingCoef = 0.975 + (scores.standing / 100) * 0.05;
-  const urgenceIdx = answers[75] ?? 2;
+  const urgenceIdx = answers[76] ?? 2;
   const urgenceCoefs = [0.94, 0.97, 1.0, 1.02];
   const urgenceCoef  = urgenceCoefs[urgenceIdx] ?? 1.0;
   const urgenceLabels = [
@@ -3501,9 +3501,9 @@ function _calculateScores() {
     prixStrategique, urgenceData, urgenceIdx, typeBien,
     ville: cityInput || 'France',
     typeBienLabel: ['Maison individuelle','Appartement','Maison mitoyenne','Loft / atypique'][typeBienIdx] || 'Bien immobilier',
-    chambres: (() => { const q=questions[12]; return q?.options?.[answers[12]]?.label || '—'; })(),
-    annee:    (() => { const q=questions[24]; return q?.options?.[answers[24]]?.label?.split(' ')[0] || '—'; })(),
-    dpe:      (() => { const q=questions[36]; return q?.options?.[answers[36]]?.label?.[0] || '—'; })(),
+    chambres: (() => { const q=questions[14]; return q?.options?.[answers[14]]?.label || '—'; })(),
+    annee:    (() => { const q=questions[26]; return q?.options?.[answers[26]]?.label?.split(' ')[0] || '—'; })(),
+    dpe:      (() => { const q=questions[38]; return q?.options?.[answers[38]]?.label?.[0] || '—'; })(),
   };
   return { scores, priceLabel, finalPriceM2, totalValue, low, high, plusVal, delai };
 }
@@ -3659,7 +3659,7 @@ function computeLiquiditeScore(scores, prix) {
   else if (scores.energie >= 75) score += 6;
 
   // Urgence de vente : impact négatif sur liquidité effective
-  const urgence = answers[75] ?? 2;
+  const urgence = answers[76] ?? 2;
   if (urgence === 0) score -= 8; // très urgent = on va brader
   if (urgence === 3) score += 4; // pas pressé = on peut attendre
 
@@ -4345,7 +4345,7 @@ function proceedToPayment() {
   // DEBUG
   try {
     var dbg = JSON.parse(decodeURIComponent(escape(atob(payload))));
-    var ok = confirm('DEBUG MonEstim:\n\nScores: ' + (dbg.scores ? 'OK' : 'NULL') + '\nPrix: ' + (dbg.prix ? 'OK' : 'NULL') + '\nanswers[9]: ' + dbg.answers[9] + '\nanswers[10]: ' + dbg.answers[10] + '\n\nOK = continuer vers paiement\nAnnuler = rester sur la page');
+    var ok = confirm('DEBUG MonEstim:\n\nScores: ' + (dbg.scores ? 'OK' : 'NULL') + '\nPrix: ' + (dbg.prix ? 'OK' : 'NULL') + '\nanswers[8]: ' + dbg.answers[8] + '\nanswers[10]: ' + dbg.answers[10] + '\n\nOK = continuer vers paiement\nAnnuler = rester sur la page');
     if (!ok) return;
   } catch(e) {}
   sessionStorage.setItem('monestim_payload', payload);
