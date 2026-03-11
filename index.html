@@ -4365,7 +4365,7 @@ function proceedToPayment() {
     sessionStorage.setItem('monestim_payload', payload);
   }
   var url = (selectedOffer === 'premium') ? PAGE_PAIEMENT_PREMIUM : PAGE_PAIEMENT_BASIC;
-  window.location.href = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'd=' + encodeURIComponent(payload);
+  window.top.location.href = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'd=' + encodeURIComponent(payload);
 }
 
 function openPayment(context) { proceedToPayment(); }
@@ -4463,16 +4463,6 @@ function upgradeAndProceed() {
 function skipUpsell() {
   document.getElementById('upsell-felicitations').style.display = 'none';
   document.getElementById('cta-felicitations').style.display    = 'block';
-}
-
-function proceedToPayment() {
-  var payload = sessionStorage.getItem('monestim_payload');
-  if (!payload) {
-    payload = buildPayload(selectedOffer || 'basic');
-    sessionStorage.setItem('monestim_payload', payload);
-  }
-  var url = (selectedOffer === 'premium') ? PAGE_PAIEMENT_PREMIUM : PAGE_PAIEMENT_BASIC;
-  window.location.href = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'd=' + encodeURIComponent(payload);
 }
 
 loadData();
