@@ -4342,10 +4342,11 @@ function proceedToPayment() {
   // Calcule les scores si pas encore fait
   if (!lastScores || !lastPrix) { _calculateScores(); }
   var payload = buildPayload(selectedOffer || 'basic');
-  // DEBUG - à supprimer après validation
+  // DEBUG
   try {
     var dbg = JSON.parse(decodeURIComponent(escape(atob(payload))));
-    console.log('[MonEstim] proceedToPayment - scores:', dbg.scores, '| prix:', dbg.prix, '| answers[9]:', dbg.answers[9], '| answers[10]:', dbg.answers[10]);
+    var ok = confirm('DEBUG MonEstim:\n\nScores: ' + (dbg.scores ? 'OK' : 'NULL') + '\nPrix: ' + (dbg.prix ? 'OK' : 'NULL') + '\nanswers[9]: ' + dbg.answers[9] + '\nanswers[10]: ' + dbg.answers[10] + '\n\nOK = continuer vers paiement\nAnnuler = rester sur la page');
+    if (!ok) return;
   } catch(e) {}
   sessionStorage.setItem('monestim_payload', payload);
   var url = (selectedOffer === 'premium') ? PAGE_PAIEMENT_PREMIUM : PAGE_PAIEMENT_BASIC;
