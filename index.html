@@ -1795,45 +1795,7 @@
     </div>
 
     
-<!-- SCREEN: UPSELL MID -->
-    <div class="screen" id="screen-upsell-mid">
-      <div class="upsell-badge">✦ Vous êtes à mi-parcours</div>
-      <h2 class="upsell-title">Votre bien mérite<br>une analyse complète.</h2>
-      <p class="upsell-desc">
-        Vous avez renseigné 25 critères. L'estimation de base est en cours de calcul. <strong>Débloquez le rapport complet</strong> pour obtenir votre fourchette précise, l'analyse par catégorie, et les leviers pour valoriser votre bien — <em>sans agent, sans RDV, sans rappel.</em>
-      </p>
 
-      <!-- Réassurance anti-agence dans l'upsell -->
-      <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:28px;">
-        <span class="anti-badge" style="font-size:11px;">📵 Aucun démarchage</span>
-        <span class="anti-badge" style="font-size:11px;">🔒 Aucune donnée revendue</span>
-        <span class="anti-badge" style="font-size:11px;">⚡ Accès immédiat</span>
-      </div>
-
-      <div class="upsell-offer">
-        <div class="upsell-offer-name">Rapport Complet MonEstim</div>
-        <div class="upsell-offer-price">14,90 € <span>14,90 €</span></div>
-        <div class="upsell-offer-sub">Paiement unique · Pas d'abonnement · Accès immédiat</div>
-        <ul class="upsell-features-list">
-          <li>Estimation précise avec fourchette basse / haute</li>
-          <li>Analyse détaillée de 8 catégories de valorisation</li>
-          <li>Comparatif avec les ventes réelles du secteur (DVF)</li>
-          <li>Travaux prioritaires pour maximiser votre prix</li>
-          <li>Conseil personnalisé : vendre maintenant ou attendre ?</li>
-          <li>PDF téléchargeable — aucun compte requis</li>
-        </ul>
-        <button class="btn-primary" onclick="openPayment('mid')" style="width:100%; justify-content:center; font-size:15px; padding:18px;">
-          Débloquer mon rapport — 14,90 €
-        </button>
-        <p style="text-align:center; font-size:11px; color:var(--text-muted); margin-top:12px;">
-          🔒 Paiement sécurisé · Satisfait ou remboursé 14 jours · <strong>Zéro rappel garanti</strong>
-        </p>
-      </div>
-
-      <div style="text-align:center">
-        <button class="btn-secondary" onclick="skipUpsell()">Continuer sans le rapport complet</button>
-      </div>
-    </div>
 
     
     <!-- SCREEN: FELICITATIONS -->
@@ -2108,7 +2070,7 @@ const questions = [
     {icon:"🤔",label:"Non vérifié / je ne sais pas", val:1.0}
   ]},
 
-  { section:"🌳 Terrain & Extérieurs", text:"Présence d'une terrasse ou balcon ?", hint:"Pour les appartements, la terrasse est le premier critère de tri des acheteurs.", type:"options", cols:2, options:[
+  { section:"🌳 Terrain & Extérieurs", text:"Présence d'une terrasse ou balcon ?", hint:"Pour les appartements, la terrasse est le premier critère de tri des acheteurs.", showIf:"appartement", type:"options", cols:2, options:[
     {icon:"🏖️",label:"Grande terrasse > 20 m² (plein soleil)", val:1.12},
     {icon:"🪴",label:"Terrasse ou balcon 5-20 m²", val:1.07},
     {icon:"🌿",label:"Petit balcon < 5 m²", val:1.03},
@@ -2995,13 +2957,6 @@ function enableNext() {
 
 function nextQuestion() {
   if (answers[currentQ] === null) return;
-
-  // Upsell mi-parcours
-  if (getVisibleIndex(currentQ) === 40 && !upsellShown && !hasPremium) {
-    upsellShown = true;
-    showScreen('upsell-mid');
-    return;
-  }
 
   const next = getNextVisibleQ(currentQ);
 
