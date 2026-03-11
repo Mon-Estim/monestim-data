@@ -4342,6 +4342,7 @@ function proceedToPayment() {
   // Calcule les scores si pas encore fait
   if (!lastScores || !lastPrix) { _calculateScores(); }
   var payload = buildPayload(selectedOffer || 'basic');
+  var url = (selectedOffer === 'premium') ? PAGE_PAIEMENT_PREMIUM : PAGE_PAIEMENT_BASIC;
   window.top.location.href = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'd=' + encodeURIComponent(payload);
 }
 
