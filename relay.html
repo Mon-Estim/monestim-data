@@ -21,36 +21,46 @@
 </div>
 <script>
 (function() {
-  var params   = new URLSearchParams(window.location.search);
+  var params    = new URLSearchParams(window.location.search);
   var stripeUrl = params.get('stripe');
   var payload   = params.get('d');
   var offer     = params.get('offer') || 'basic';
 
-  // CAS 1 : avant Stripe (stripeUrl présent)
-  // Stocke le payload en localStorage puis part vers Stripe
+  // ── CAS 1 : avant Stripe (stripeUrl présent) ──
   if (stripeUrl) {
     if (payload) {
       try { localStorage.setItem('monestim_payload', payload); } catch(e) {}
+      try { sessionStorage.setItem('monestim_payload', payload); } catch(e) {}
     }
     window.location.href = decodeURIComponent(stripeUrl);
     return;
   }
 
-  // CAS 2 : retour de Stripe (offer présent, pas de stripeUrl)
-  // Relit localStorage, injecte l'offre, redirige vers Systeme.io avec payload dans le hash
-  var stored = '';
-  try { stored = localStorage.getItem('monestim_payload') || ''; } catch(e) {}
+  // ── CAS 2 : retour de Stripe ──
+  // Relit depuis cookie (survit à la session Stripe)
+  function getCookie(name) {
+    var match = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
+    return match ? decodeURIComponent(match[1]) : '';
+  }
+  var stored = getCookie('monestim_payload');
+  if (!stored) { try { stored = localStorage.getItem('monestim_payload') || ''; } catch(e) {} }
+  if (!stored) { try { stored = sessionStorage.getItem('monestim_payload') || ''; } catch(e) {} }
 
   if (stored) {
     try {
       var data = JSON.parse(decodeURIComponent(escape(atob(stored))));
-      data.offer = offer;
+      // Priorité au paramètre offer de l'URL (défini par le success_url Stripe)
+      // SAUF si le payload contient déjà une offre premium (upsell sur paiement.html)
+      if (data.offer !== 'premium') { data.offer = offer; }
       stored = btoa(unescape(encodeURIComponent(JSON.stringify(data))));
     } catch(e) {}
+    // Nettoyage
+    document.cookie = 'monestim_payload=; path=/; max-age=0';
     try { localStorage.removeItem('monestim_payload'); } catch(e) {}
+    try { sessionStorage.removeItem('monestim_payload'); } catch(e) {}
     window.location.href = 'https://www.mon-estim.fr/votre-estimation#d=' + encodeURIComponent(stored);
   } else {
-    window.location.href = 'https://www.mon-estim.fr/votre-estimation?offer=' + offer;
+    window.location.href = 'https://www.mon-estim.fr/votre-estimation?offer=' + offer + '&lost=1';
   }
 })();
 </script>
