@@ -3463,75 +3463,55 @@ function showResults() {
   _renderResults();
 }
 
-function _renderResults() {
-  showScreen('result');
-
+function _calculateScores() {
   const scores = computeScores();
   lastScores = scores;
-
-  // Surface : Q10 (index 10)
   const surface = (answers[10] !== null) ? answers[10] : 85;
-
-  // Type bien : Q9 (index 9) — 0=maison, 1=appart, 2=mitoyenne, 3=loft
   const typeBienIdx = answers[9] ?? 0;
   const typeBien = (typeBienIdx === 1) ? 'appart' : 'maison';
-
   const cityInput = document.getElementById('city-input')?.value || '';
   const prices = getCityPrices(cityInput, typeBien);
   const prixBand = prices[typeBien];
-
-  // Sélection bande prix selon score état
   let basePriceM2, priceLabel;
-  if (scores.etat < 40) {
-    basePriceM2 = prixBand[0]; priceLabel = "marché bas (travaux importants)";
-  } else if (scores.etat < 65) {
-    basePriceM2 = prixBand[1]; priceLabel = "marché médian";
-  } else {
-    basePriceM2 = prixBand[2]; priceLabel = "marché haut (bien rénové/neuf)";
-  }
-
-  // Coefficient localisation (±10%)
-  const locCoef = 0.90 + (scores.localisation / 100) * 0.20;
-  // Coefficient énergie (±5%)
-  const energieCoef = 0.97 + (scores.energie / 100) * 0.06;
-  // Coefficient standing (±5%)
+  if (scores.etat < 40) { basePriceM2 = prixBand[0]; priceLabel = "marché bas (travaux importants)"; }
+  else if (scores.etat < 65) { basePriceM2 = prixBand[1]; priceLabel = "marché médian"; }
+  else { basePriceM2 = prixBand[2]; priceLabel = "marché haut (bien rénové/neuf)"; }
+  const locCoef      = 0.90 + (scores.localisation / 100) * 0.20;
+  const energieCoef  = 0.97 + (scores.energie / 100) * 0.06;
   const standingCoef = 0.975 + (scores.standing / 100) * 0.05;
-
-  // ── Urgence de vente (Q75 = index de la question urgence)
-  // Index : 0=très urgent(0.94), 1=assez urgent(0.97), 2=pas pressé(1.0), 3=aucune urgence(1.02)
-  const urgenceIdx = answers[75] ?? 2; // défaut = pas pressé
+  const urgenceIdx = answers[75] ?? 2;
   const urgenceCoefs = [0.94, 0.97, 1.0, 1.02];
-  const urgenceCoef = urgenceCoefs[urgenceIdx] ?? 1.0;
+  const urgenceCoef  = urgenceCoefs[urgenceIdx] ?? 1.0;
   const urgenceLabels = [
-    { label: 'Très urgent', delaiCible: '< 2 mois', remise: '−6%', conseil: 'Pour vendre en moins de 2 mois, affichez votre bien à −6% sous la valeur de marché. Les acheteurs actifs soumettent une offre dans les 10 jours sur un bien sous-coté. Évitez absolument de commencer haut et de baisser — cela stigmatise le bien.' },
-    { label: 'Assez urgent', delaiCible: '2-3 mois', remise: '−3%', conseil: 'Pour vendre en 2 à 3 mois, un positionnement à −3% sous la valeur de marché suffit généralement à déclencher plusieurs visites qualifiées dès la première semaine.' },
-    { label: 'Pas pressé', delaiCible: '3-6 mois', remise: 'Prix marché', conseil: 'Vous pouvez afficher au prix de marché. Prévoyez une première négociation possible de 2 à 4%. Si pas d\'offre en 6 semaines, réévaluez la stratégie de prix.' },
-    { label: 'Aucune urgence', delaiCible: '6-12 mois', remise: '+1 à 2%', conseil: 'Avec du temps devant vous, affichez légèrement au-dessus du marché pour avoir de la marge de négociation. Un acheteur coup de cœur paiera le prix fort — attendez-le.' },
+    { label: 'Très urgent',    delaiCible: '< 2 mois',  remise: '−6%',         conseil: 'Pour vendre en moins de 2 mois, affichez votre bien à −6% sous la valeur de marché. Les acheteurs actifs soumettent une offre dans les 10 jours sur un bien sous-coté. Évitez absolument de commencer haut et de baisser — cela stigmatise le bien.' },
+    { label: 'Assez urgent',   delaiCible: '2-3 mois',  remise: '−3%',         conseil: 'Pour vendre en 2 à 3 mois, un positionnement à −3% sous la valeur de marché suffit généralement à déclencher plusieurs visites qualifiées dès la première semaine.' },
+    { label: 'Pas pressé',     delaiCible: '3-6 mois',  remise: 'Prix marché', conseil: "Vous pouvez afficher au prix de marché. Prévoyez une première négociation possible de 2 à 4%. Si pas d'offre en 6 semaines, réévaluez la stratégie de prix." },
+    { label: 'Aucune urgence', delaiCible: '6-12 mois', remise: '+1 à 2%',     conseil: "Avec du temps devant vous, affichez légèrement au-dessus du marché pour avoir de la marge de négociation. Un acheteur coup de cœur paiera le prix fort — attendez-le." },
   ];
   const urgenceData = urgenceLabels[urgenceIdx] ?? urgenceLabels[2];
-
-  const finalPriceM2 = Math.round(basePriceM2 * locCoef * energieCoef * standingCoef);
-  // La valeur de marché objective (sans urgence) — affichée comme référence
-  const totalValue = Math.round(finalPriceM2 * surface / 1000) * 1000;
-  // Prix stratégique ajusté à l'urgence — affiché en recommandation dans le PDF
+  const finalPriceM2    = Math.round(basePriceM2 * locCoef * energieCoef * standingCoef);
+  const totalValue      = Math.round(finalPriceM2 * surface / 1000) * 1000;
   const prixStrategique = Math.round(totalValue * urgenceCoef / 1000) * 1000;
   const low  = Math.round(totalValue * 0.93 / 1000) * 1000;
   const high = Math.round(totalValue * 1.07 / 1000) * 1000;
-
-  // Potentiel plus-value selon score état
   const plusVal = scores.etat < 45 ? '+15 à 28%' : scores.etat < 65 ? '+6 à 14%' : '+2 à 6%';
-  const delai = scores.global > 78 ? '1-2 mois' : scores.global > 60 ? '2-4 mois' : '4-8 mois';
-
-  // Mémoriser pour le PDF
+  const delai   = scores.global > 78 ? '1-2 mois' : scores.global > 60 ? '2-4 mois' : '4-8 mois';
   lastPrix = {
     totalValue, low, high, finalPriceM2, surface, plusVal, delai,
-    prixStrategique, urgenceData, urgenceIdx,
-    typeBien, ville: cityInput || 'France',
+    prixStrategique, urgenceData, urgenceIdx, typeBien,
+    ville: cityInput || 'France',
     typeBienLabel: ['Maison individuelle','Appartement','Maison mitoyenne','Loft / atypique'][typeBienIdx] || 'Bien immobilier',
     chambres: (() => { const q=questions[12]; return q?.options?.[answers[12]]?.label || '—'; })(),
-    annee: (() => { const q=questions[24]; return q?.options?.[answers[24]]?.label?.split(' ')[0] || '—'; })(),
-    dpe: (() => { const q=questions[36]; return q?.options?.[answers[36]]?.label?.[0] || '—'; })(),
+    annee:    (() => { const q=questions[24]; return q?.options?.[answers[24]]?.label?.split(' ')[0] || '—'; })(),
+    dpe:      (() => { const q=questions[36]; return q?.options?.[answers[36]]?.label?.[0] || '—'; })(),
   };
+  return { scores, priceLabel, finalPriceM2, totalValue, low, high, plusVal, delai };
+}
+
+function _renderResults() {
+  showScreen('result');
+  const { scores, priceLabel, finalPriceM2, totalValue, low, high, plusVal, delai } = _calculateScores();
+
 
   document.getElementById('result-value').textContent = totalValue.toLocaleString('fr-FR') + ' €';
   document.getElementById('result-range').textContent = `Fourchette : ${low.toLocaleString('fr-FR')} € — ${high.toLocaleString('fr-FR')} €`;
@@ -4359,11 +4339,10 @@ async function generatePDF() {
 
 // PAYMENT
 function proceedToPayment() {
-  var payload = sessionStorage.getItem('monestim_payload');
-  if (!payload) {
-    payload = buildPayload(selectedOffer || 'basic');
-    sessionStorage.setItem('monestim_payload', payload);
-  }
+  // Calcule les scores si pas encore fait
+  if (!lastScores || !lastPrix) { _calculateScores(); }
+  var payload = buildPayload(selectedOffer || 'basic');
+  sessionStorage.setItem('monestim_payload', payload);
   var url = (selectedOffer === 'premium') ? PAGE_PAIEMENT_PREMIUM : PAGE_PAIEMENT_BASIC;
   window.top.location.href = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'd=' + encodeURIComponent(payload);
 }
