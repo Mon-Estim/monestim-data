@@ -12,6 +12,16 @@
     margin: 0 !important;
     padding: 0 !important;
     overflow-x: hidden;
+    background: #0D0D0D !important;
+    width: 100%;
+  }
+  html {
+    background: #0D0D0D !important;
+    min-height: 100vh;
+  }
+  body {
+    background: #0D0D0D !important;
+    min-height: 100vh;
   }
   :root {
     --gold: #C9A84C;
@@ -39,6 +49,8 @@
     content: '';
     position: fixed;
     inset: 0;
+    width: 100%;
+    height: 100%;
     background:
       radial-gradient(ellipse 80% 60% at 20% 10%, rgba(201,168,76,0.06) 0%, transparent 60%),
       radial-gradient(ellipse 60% 80% at 80% 90%, rgba(201,168,76,0.04) 0%, transparent 60%);
@@ -46,7 +58,7 @@
     z-index: 0;
   }
 
-  .app { position: relative; z-index: 1; }
+  .app { position: relative; z-index: 1; min-height: 100vh; background: var(--dark); width: 100%; box-sizing: border-box; }
 
   header {
     display: flex;
@@ -2580,6 +2592,7 @@ function startQuiz() {
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('screen-' + id).classList.add('active');
+  if (window.notifyHeight) window.notifyHeight();
 }
 
 // Données des sections pour les cartes de transition
@@ -2931,6 +2944,8 @@ function renderQuestion() {
     btnNext.style.pointerEvents = 'none';
     btnNext.textContent = 'Suivant →';
   }
+  // Notifie la hauteur à la page parente après rendu
+  if (window.notifyHeight) window.notifyHeight();
 }
 
 function formatRangeVal(val, unit) {
@@ -3476,9 +3491,9 @@ function _calculateScores() {
   if (scores.etat < 40) { basePriceM2 = prixBand[0]; priceLabel = "marché bas (travaux importants)"; }
   else if (scores.etat < 65) { basePriceM2 = prixBand[1]; priceLabel = "marché médian"; }
   else { basePriceM2 = prixBand[2]; priceLabel = "marché haut (bien rénové/neuf)"; }
-  const locCoef      = 0.90 + (scores.localisation / 100) * 0.20;
-  const energieCoef  = 0.97 + (scores.energie / 100) * 0.06;
-  const standingCoef = 0.975 + (scores.standing / 100) * 0.05;
+  const locCoef      = 0.88 + (scores.localisation / 100) * 0.24;  // ±12% micro-quartier
+  const energieCoef  = 0.89 + (scores.energie / 100) * 0.16;     // −11% à +5% (DPE loi Climat)
+  const standingCoef = 0.92  + (scores.standing / 100) * 0.16;   // −8% à +8% finitions/standing
   const urgenceIdx = answers[76] ?? 2;
   const urgenceCoefs = [0.94, 0.97, 1.0, 1.02];
   const urgenceCoef  = urgenceCoefs[urgenceIdx] ?? 1.0;
@@ -4451,18 +4466,28 @@ loadData();
 (function() {
   function sendHeight() {
     var app = document.querySelector('.app') || document.querySelector('main') || document.body;
-    var h = app.offsetHeight;
-    window.parent.postMessage({ type: 'monestim-height', height: h }, '*');
+    var h = Math.max(
+      app.scrollHeight,
+      app.offsetHeight,
+      document.documentElement.scrollHeight,
+      document.body.scrollHeight
+    );
+    window.parent.postMessage({ type: 'monestim-height', height: h + 40 }, '*');
   }
-  window.addEventListener('load', function() {
+  // Expose globalement pour appel direct depuis renderQuestion/showScreen
+  window.notifyHeight = function() {
     sendHeight();
-    setTimeout(sendHeight, 500);
-    setTimeout(sendHeight, 1500);
-  });
-  window.addEventListener('resize', sendHeight);
+    setTimeout(sendHeight, 80);
+    setTimeout(sendHeight, 300);
+    setTimeout(sendHeight, 700);
+  };
+  window.addEventListener('load', window.notifyHeight);
+  window.addEventListener('resize', window.notifyHeight);
   if (window.MutationObserver) {
-    new MutationObserver(function() { setTimeout(sendHeight, 150); })
-      .observe(document.querySelector('.app') || document.body, { childList: true, subtree: true });
+    new MutationObserver(function() {
+      sendHeight();
+      setTimeout(sendHeight, 100);
+    }).observe(document.querySelector('.app') || document.body, { childList: true, subtree: true });
   }
 })();
 </script>
