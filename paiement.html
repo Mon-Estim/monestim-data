@@ -406,17 +406,11 @@ function goToPayment(offer) {
     } catch(e) {}
   }
   var baseUrl = offer === 'premium' ? STRIPE_PREMIUM : STRIPE_BASIC;
-  // Stripe Payment Links : on ajoute le payload en ?prefilled_email= non,
-  // on utilise le paramètre ?client_reference_id= (max 200 chars insuffisant)
-  // SOLUTION : on redirige vers une page intermédiaire GitHub qui stocke puis rebondit vers Stripe
+  // Stocke dans localStorage (même domaine github.io → relay.html peut le relire)
   if (payload) {
-    var relayUrl = 'https://mon-estim.github.io/monestim-data/relay.html'
-      + '?stripe=' + encodeURIComponent(baseUrl)
-      + '&d=' + encodeURIComponent(payload);
-    window.top.location.href = relayUrl;
-  } else {
-    window.top.location.href = baseUrl;
+    try { localStorage.setItem('monestim_payload', payload); } catch(e) {}
   }
+  window.top.location.href = baseUrl;
 }
 </script>
 

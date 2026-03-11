@@ -78,15 +78,7 @@
           <p style="font-size:11px; color:var(--text-muted); opacity:.7;">Sources : DVF — DGFiP · Ventes notariées 2020–2025</p>
         </div>
 
-        <div style="background:linear-gradient(135deg,rgba(201,168,76,.06),rgba(201,168,76,.01)); border:1px solid rgba(201,168,76,.3); border-radius:16px; padding:28px; text-align:center;">
-          <p style="font-size:11px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--gold); margin-bottom:12px;">✦ Envie d'aller plus loin ?</p>
-          <p style="font-family:'Cormorant Garamond',serif; font-size:20px; font-weight:300; margin-bottom:8px; line-height:1.4;">
-            Scoring détaillé 7 dimensions, leviers de valorisation<br>et rapport PDF 7 pages — pour 5 € de plus
-          </p>
-          <a href="REMPLACER_URL_BON_COMMANDE_PREMIUM" class="btn-primary" style="text-decoration:none; display:inline-flex; justify-content:center; margin-top:16px;">
-            Passer à l'Analyse Complète — 14,90 € →
-          </a>
-        </div>
+
 
       </div>
 
@@ -189,11 +181,17 @@ function fmtEur(v) {
 }
 
 function loadResults() {
-  // Lit ?d= dans query string ET #d= dans le hash (envoyé par relay.html après Stripe)
+  // 1. Paramètre ?d= direct (ex: resultats.html?d=...)
   var paramsQ = new URLSearchParams(window.location.search);
-  var paramsH = new URLSearchParams(window.location.hash.replace(/^#/, ''));
-  var raw = paramsQ.get('d') || paramsH.get('d') || sessionStorage.getItem('monestim_payload') || '';
-  // Fallback : localStorage
+  var raw = paramsQ.get('d') || '';
+  // 2. Hash #d= de l'iframe elle-même
+  if (!raw) {
+    var paramsH = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+    raw = paramsH.get('d') || '';
+  }
+  // 3. sessionStorage (même domaine GitHub)
+  if (!raw) { try { raw = sessionStorage.getItem('monestim_payload') || ''; } catch(e) {} }
+  // 4. localStorage (même domaine GitHub)
   if (!raw) { try { raw = localStorage.getItem('monestim_payload') || ''; } catch(e) {} }
   if (!raw) {
     document.getElementById('state-loading').style.display = 'none';
@@ -288,7 +286,20 @@ async function downloadPDF() {
   }
 }
 
+// Écoute postMessage depuis la page parente Systeme.io
+window.addEventListener('message', function(e) {
+  if (e.data && e.data.type === 'monestim-payload' && e.data.payload) {
+    try { sessionStorage.setItem('monestim_payload', e.data.payload); } catch(ex) {}
+    loadResults();
+  }
+});
+
 loadResults();
+
+// Si aucune donnée chargée, demande à la page parente (qui a le hash #d=)
+setTimeout(function() {
+  window.parent.postMessage({ type: 'monestim-request-payload' }, '*');
+}, 400);
 </script>
 
 <script>
