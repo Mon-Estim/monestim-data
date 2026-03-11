@@ -58,7 +58,9 @@
     document.cookie = 'monestim_payload=; path=/; max-age=0';
     try { localStorage.removeItem('monestim_payload'); } catch(e) {}
     try { sessionStorage.removeItem('monestim_payload'); } catch(e) {}
-    window.location.href = 'https://www.mon-estim.fr/votre-estimation#d=' + encodeURIComponent(stored);
+    // window.name survit aux navigations cross-domain dans le même onglet
+    window.name = 'monestim_payload:' + stored;
+    window.location.href = 'https://www.mon-estim.fr/votre-estimation';
   } else {
     window.location.href = 'https://www.mon-estim.fr/votre-estimation?offer=' + offer + '&lost=1';
   }
