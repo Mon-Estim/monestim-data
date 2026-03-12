@@ -11,9 +11,10 @@
   html, body {
     margin: 0 !important;
     padding: 0 !important;
-    overflow-x: hidden;
+    overflow: hidden;
     background: #0D0D0D !important;
     width: 100%;
+    max-width: 100%;
   }
   html {
     background: #0D0D0D !important;
@@ -58,7 +59,7 @@
     z-index: 0;
   }
 
-  .app { position: relative; z-index: 1; height: auto; background: var(--dark); width: 100%; box-sizing: border-box; }
+  .app { position: relative; z-index: 1; height: auto; background: var(--dark); width: 100%; box-sizing: border-box; overflow-x: hidden; padding-bottom: 24px; }
 
   header {
     display: flex;
@@ -425,9 +426,13 @@
   }
 
   .btn-cta-main {
-    font-size: 15px;
-    padding: 18px 36px;
-    white-space: nowrap;
+    font-size: 14px;
+    padding: 16px 20px;
+    white-space: normal;
+    text-align: center;
+    width: 100%;
+    box-sizing: border-box;
+    justify-content: center;
   }
 
   .cta-reassurance {
@@ -1443,15 +1448,12 @@
     .options-grid.cols-3 { grid-template-columns: 1fr !important; }
     .option-btn { padding: 14px 16px; font-size: 13px; }
 
-    /* Bouton suivant sticky en bas */
+    /* Bouton suivant — static dans iframe (fixed ne fonctionne pas dans iframe iOS) */
     #btn-next {
-      position: fixed !important;
-      bottom: 16px;
-      left: 16px;
-      right: 16px;
-      width: calc(100% - 32px) !important;
-      z-index: 100;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+      position: static !important;
+      width: 100% !important;
+      margin-top: 16px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
     }
 
     /* Section card */
@@ -4464,30 +4466,37 @@ loadData();
 <script>
 // ── Hauteur dynamique iframe ──
 (function() {
+  var app = document.querySelector('.app') || document.body;
+
   function sendHeight() {
-    var app = document.querySelector('.app') || document.querySelector('main') || document.body;
-    var h = Math.max(
-      app.scrollHeight,
-      app.offsetHeight,
-      document.documentElement.scrollHeight,
-      document.body.scrollHeight
-    );
-    window.parent.postMessage({ type: 'monestim-height', height: h + 40 }, '*');
+    // Sur iOS Safari, scrollHeight est unreliable — on utilise getBoundingClientRect
+    var rect = app.getBoundingClientRect();
+    var h = Math.round(rect.height) + 32;
+    if (h < 200) h = app.offsetHeight + 32;
+    window.parent.postMessage({ type: 'monestim-height', height: h }, '*');
   }
-  // Expose globalement pour appel direct depuis renderQuestion/showScreen
+
   window.notifyHeight = function() {
     sendHeight();
     setTimeout(sendHeight, 80);
     setTimeout(sendHeight, 300);
     setTimeout(sendHeight, 700);
   };
+
   window.addEventListener('load', window.notifyHeight);
   window.addEventListener('resize', window.notifyHeight);
-  if (window.MutationObserver) {
+
+  // ResizeObserver — plus fiable que MutationObserver sur iOS
+  if (window.ResizeObserver) {
+    new ResizeObserver(function() {
+      sendHeight();
+      setTimeout(sendHeight, 80);
+    }).observe(app);
+  } else if (window.MutationObserver) {
     new MutationObserver(function() {
       sendHeight();
       setTimeout(sendHeight, 100);
-    }).observe(document.querySelector('.app') || document.body, { childList: true, subtree: true });
+    }).observe(app, { childList: true, subtree: true, attributes: true });
   }
 })();
 </script>
