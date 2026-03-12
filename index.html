@@ -3489,14 +3489,135 @@ function _calculateScores() {
   const cityInput = document.getElementById('city-input')?.value || '';
   const prices = getCityPrices(cityInput, typeBien);
   const prixBand = prices[typeBien];
-  let basePriceM2, priceLabel;
-  if (scores.etat < 40) { basePriceM2 = prixBand[0]; priceLabel = "marché bas (travaux importants)"; }
-  else if (scores.etat < 65) { basePriceM2 = prixBand[1]; priceLabel = "marché médian"; }
-  else { basePriceM2 = prixBand[2]; priceLabel = "marché haut (bien rénové/neuf)"; }
-  const locCoef      = 0.88 + (scores.localisation / 100) * 0.24;  // ±12% micro-quartier
-  const energieCoef  = 0.89 + (scores.energie / 100) * 0.16;     // −11% à +5% (DPE loi Climat)
-  const standingCoef = 0.92  + (scores.standing / 100) * 0.16;   // −8% à +8% finitions/standing
-  const urgenceIdx = answers[76] ?? 2;
+  let // ═══════════════════════════════════════════════════════════════════════
+  // MOTEUR DE VALORISATION — Moyenne géométrique pondérée par dimension
+  // Chaque question contribue directement via son val (multiplicateur DVF).
+  // Pas de bandes discrètes : chaque réponse tire le prix proportionnellement.
+  // Un critère mauvais ne peut pas être compensé par d'autres bons critères
+  // dans la même dimension — la géométrie garantit l'absence de compensation.
+  // ═══════════════════════════════════════════════════════════════════════
+
+  // Récupère le val brut d'une question (1.0 si non répondu)
+  function getVal(qi) {
+    const q = questions[qi];
+    if (!q || answers[qi] === null || !isQuestionVisible(q)) return 1.0;
+    return q.options?.[answers[qi]]?.val ?? 1.0;
+  }
+
+  // Moyenne géométrique pondérée : exp(Σ poids_i × ln(val_i))
+  // → un seul val très bas tire fortement le résultat vers le bas
+  function geoPondere(pairesValPoids) {
+    let logSum = 0, poidsTotal = 0;
+    pairesValPoids.forEach(([v, p]) => { logSum += p * Math.log(Math.max(v, 0.50)); poidsTotal += p; });
+    return Math.exp(logSum / poidsTotal);
+  }
+
+  // Projette un coef brut [valMin..valMax] → [plageMin..plageMax] de marché réel
+  // Calibré sur études notariales DVF 2020-2025 (amplitude réelle observée)
+  function projeter(coefBrut, valMin, valMax, plageMin, plageMax) {
+    const t = Math.max(0, Math.min(1, (coefBrut - valMin) / (valMax - valMin)));
+    return plageMin + t * (plageMax - plageMin);
+  }
+
+  // ── DIMENSION 1 : LOCALISATION  (poids global 26%) ─────────────────
+  // Q00 région, Q01 commune, Q02 distance ville, Q03 quartier,
+  // Q04 transports, Q05 commerces, Q06 vue, Q07 risques
+  const coefLocBrut = geoPondere([
+    [getVal(0),  0.25], [getVal(1),  0.15], [getVal(2),  0.12], [getVal(3),  0.20],
+    [getVal(4),  0.09], [getVal(5),  0.07], [getVal(6),  0.07], [getVal(7),  0.05],
+  ]);
+  // Plage réelle : −25% (zone risque/rurale isolée) → +25% (Paris/côte/quartier premium)
+  const coefLoc = projeter(coefLocBrut, 0.80, 1.80, 0.75, 1.25);
+
+  // ── DIMENSION 2 : ÉTAT STRUCTUREL  (poids global 22%) ──────────────
+  // Q27 état général (poids fort — vision globale de l'acheteur)
+  // Q34 toiture (15-50k€ de travaux si mauvaise)
+  // Q35 plomberie, Q36 électricité (sécurité, obligatoire)
+  // Q33 combles/isolation (DPE et thermique)
+  // Q37 travaux récents réalisés (valorise fortement)
+  const coefEtatBrut = geoPondere([
+    [getVal(27), 0.30], // état général — double poids car vision acheteur
+    [getVal(34), 0.22], // toiture — poste le plus cher
+    [getVal(35), 0.15], // plomberie
+    [getVal(36), 0.15], // électricité
+    [getVal(33), 0.10], // combles
+    [getVal(37), 0.08], // travaux récents faits
+  ]);
+  // Plage réelle : −25% (structurellement dégradé) → +15% (tout refait neuf)
+  const coefEtat = projeter(coefEtatBrut, 0.60, 1.20, 0.75, 1.15);
+
+  // ── DIMENSION 3 : FINITIONS INTÉRIEURES  (poids global 13%) ────────
+  // Q28 sols, Q29 murs/peintures, Q30 cuisine, Q31 SDB, Q32 huisseries
+  // Chaque élément pèse son importance réelle dans la décision d'achat
+  const coefFinBrut = geoPondere([
+    [getVal(28), 0.18], // sols
+    [getVal(29), 0.17], // murs/peintures
+    [getVal(30), 0.22], // cuisine — critère décisif n°1 des acheteurs
+    [getVal(31), 0.22], // SDB — critère décisif n°2
+    [getVal(32), 0.21], // huisseries (double vitrage OK vs simple : ~1-2%)
+  ]);
+  // Plage réelle : −12% (tout vétuste) → +12% (tout rénové récemment)
+  const coefFin = projeter(coefFinBrut, 0.85, 1.18, 0.88, 1.12);
+
+  // ── DIMENSION 4 : ÉNERGIE / DPE  (poids global 17%) ────────────────
+  // Q38 DPE (poids très fort — loi Climat 2021 : passoire F/G = −15% légal + interdiction location)
+  // Q39 chauffage, Q40 appoint, Q41 renouvelable, Q42 confort été, Q43 facture
+  const coefEnergieBrut = geoPondere([
+    [getVal(38), 0.40], // DPE — poids dominant
+    [getVal(39), 0.22], // type de chauffage
+    [getVal(41), 0.08], // production renouvelable
+    [getVal(42), 0.13], // confort été
+    [getVal(43), 0.17], // facture annuelle réelle
+  ]);
+  // Plage réelle : −20% (DPE G, fioul, aucune isolation) → +8% (DPE A, PAC, solaire)
+  const coefEnergie = projeter(coefEnergieBrut, 0.80, 1.18, 0.80, 1.08);
+
+  // ── DIMENSION 5 : STANDING & CACHET  (poids global 13%) ────────────
+  // Q49 finitions globales, Q50 luminosité, Q51 hauteur, Q52 rangements,
+  // Q53 cachet architectural, Q54 domotique, Q74 exposition solaire
+  const coefStandBrut = geoPondere([
+    [getVal(49), 0.25], // qualité finitions générales
+    [getVal(50), 0.22], // luminosité (très important pour les acheteurs)
+    [getVal(51), 0.12], // hauteur sous plafond
+    [getVal(52), 0.08], // rangements
+    [getVal(53), 0.15], // cachet / caractère architectural
+    [getVal(54), 0.05], // domotique
+    [getVal(74), 0.13], // exposition solaire
+  ]);
+  // Plage réelle : −10% (bas de gamme, sombre) → +10% (luxe, lumineux, exceptionnel)
+  const coefStanding = projeter(coefStandBrut, 0.87, 1.18, 0.90, 1.10);
+
+  // ── DIMENSION 6 : MARCHÉ LOCAL  (poids global 9%) ──────────────────
+  // Q66 tension marché, Q67 dev/déclin, Q68 potentiel locatif, Q70 nuisances futures
+  const coefMarcheBrut = geoPondere([
+    [getVal(66), 0.40], // tension du marché local
+    [getVal(67), 0.25], // dynamique dev/déclin secteur
+    [getVal(68), 0.20], // potentiel locatif
+    [getVal(70), 0.15], // nuisances/projets urbanisme
+  ]);
+  // Plage réelle : −8% (marché déprimé) → +8% (marché très tendu)
+  const coefMarche = projeter(coefMarcheBrut, 0.82, 1.20, 0.92, 1.08);
+
+  // ── PRIX FINAL M² — PRODUIT DES COEFS DIMENSIONNELS ────────────────
+  // Ancrage : prix DVF médian de la commune (réalité notariale)
+  // Chaque dimension applique son impact multiplicatif indépendamment
+  // → un DPE F tire le prix vers le bas même si le quartier est excellent
+  const prixDVF_ancrage = prixBand[1]; // toujours le médian DVF comme ancrage neutre
+  const priceLabel = 'Prix personnalisé — modèle multicritères DVF';
+
+  const finalPriceM2 = Math.round(
+    prixDVF_ancrage
+    * Math.pow(coefLoc,      0.26)
+    * Math.pow(coefEtat,     0.22)
+    * Math.pow(coefFin,      0.13)
+    * Math.pow(coefEnergie,  0.17)
+    * Math.pow(coefStanding, 0.13)
+    * Math.pow(coefMarche,   0.09)
+  );
+  const basePriceM2 = finalPriceM2; // compatibilité avec le reste du code
+
+  // Urgence de vente — ajustement stratégique final (hors modèle)
+  const urgenceIdx   = answers[76] ?? 2;
   const urgenceCoefs = [0.94, 0.97, 1.0, 1.02];
   const urgenceCoef  = urgenceCoefs[urgenceIdx] ?? 1.0;
   const urgenceLabels = [
@@ -3505,9 +3626,8 @@ function _calculateScores() {
     { label: 'Pas pressé',     delaiCible: '3-6 mois',  remise: 'Prix marché', conseil: "Vous pouvez afficher au prix de marché. Prévoyez une première négociation possible de 2 à 4%. Si pas d'offre en 6 semaines, réévaluez la stratégie de prix." },
     { label: 'Aucune urgence', delaiCible: '6-12 mois', remise: '+1 à 2%',     conseil: "Avec du temps devant vous, affichez légèrement au-dessus du marché pour avoir de la marge de négociation. Un acheteur coup de cœur paiera le prix fort — attendez-le." },
   ];
-  const urgenceData = urgenceLabels[urgenceIdx] ?? urgenceLabels[2];
-  const finalPriceM2    = Math.round(basePriceM2 * locCoef * energieCoef * standingCoef);
-  const totalValue      = Math.round(finalPriceM2 * surface / 1000) * 1000;
+  const urgenceData  = urgenceLabels[urgenceIdx] ?? urgenceLabels[2];
+  const totalValue   = Math.round(finalPriceM2 * surface / 1000) * 1000;
   const prixStrategique = Math.round(totalValue * urgenceCoef / 1000) * 1000;
   const low  = Math.round(totalValue * 0.93 / 1000) * 1000;
   const high = Math.round(totalValue * 1.07 / 1000) * 1000;

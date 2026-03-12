@@ -576,10 +576,10 @@ async function generatePDF() {
   // Q33  toiture           0=récente, 1=bon état, 2=travaux à prévoir, 3=urgent/infiltrations
   // Q34  plomberie         0=récente, 1=correcte, 2=partiellement vétuste, 3=plomb/galvanisé
   // Q35  électricité       0=aux normes, 1=probable ok, 2=partiel, 3=ancienne/fusibles
-  // Q37  DPE               0=A, 1=B, 2=C, 3=D, 4=E, 5=F/G (passoire)
-  // Q38  chauffage         0=PAC, 1=gaz cond., 2=convecteurs élec, 3=fioul/poêle
-  // Q41  confort été       0=clim, 1=bien orienté, 2=volets ok, 3=inconfort avéré
-  // Q42  facture énergie   0=<800€, 1=800-1500€, 2=1500-2500€, 3=>2500€
+  // Q38  DPE               0=A, 1=B, 2=C, 3=D, 4=E, 5=F/G (passoire)
+  // Q39  chauffage         0=PAC, 1=gaz cond., 2=convecteurs élec, 3=fioul/poêle
+  // Q42  confort été       0=clim, 1=bien orienté, 2=volets ok, 3=inconfort avéré
+  // Q43  facture énergie   0=<800€, 1=800-1500€, 2=1500-2500€, 3=>2500€
   // Q43  état immeuble     0=très bon, 1=bon, 2=moyen, 3=dégradé  (appart seulement)
   // Q45  travaux copro     0=aucun, 1=petits, 2=importants, 3=difficulté  (appart)
   // Q48  matériaux/finit.  0=haut gamme, 1=bon standing, 2=standard, 3=bas coût
@@ -594,73 +594,80 @@ async function generatePDF() {
   var typeBien    = a[8];                    // 0=maison/mitoyenne, 1=appart, 3=loft
   var isMaison    = (typeBien === 0 || typeBien === 2 || typeBien === 3);
   var isAppart    = (typeBien === 1);
-  var ancienBien  = a[25] <= 1;             // avant 1980 — risques plomberie/elec plus fréquents
+  var ancienBien  = a[26] <= 1;             // avant 1980 (Q26=année construction)
 
-  // ── Terrain & extérieurs (maison principalement) ──
-  var jardinFriche      = a[20] === 3;
-  var jardinNonAmenage  = a[20] >= 2;        // non aménagé ou friche
-  var jardinOK          = a[20] <= 1;        // arboré ou bien entretenu => PAS de levier jardin
-  var terrасseAbsente   = a[22] === 3;       // aucun extérieur
-  var terrасseMinimale  = a[22] >= 2;        // petit balcon ou aucun
+  // ── INDEX DÉFINITIFS — 80 questions, audit mars 2025 ──────
+  // Q08=type  Q13=surface  Q20=terrain  Q21=jardin  Q22=constructible
+  // Q23=terrasse  Q24=piscine  Q25=parking  Q26=année  Q27=état général
+  // Q28=sols  Q29=murs  Q30=cuisine  Q31=SDB  Q32=huisseries
+  // Q33=combles  Q34=toiture  Q35=plomberie  Q36=électricité  Q37=trvx récents
+  // Q38=DPE  Q39=chauffage  Q42=confort été  Q43=facture énergie
+  // Q44=état immeuble(appart)  Q46=trvx copro(appart)
+  // Q49=matériaux/finitions  Q50=luminosité  Q52=rangements  Q76=urgence
 
-  // ── État général & travaux ──
-  var solMauvais        = a[27] === 3;       // moquette/carrelage 80s uniquement
-  var solPassable       = a[27] >= 2;        // stratifié ou pire
-  var solOK             = a[27] <= 1;        // parquet massif ou contrecollé => pas de levier
-  var peinturesARafr    = a[28] === 2;       // à rafraîchir (fissures légères)
-  var peinturesMauv     = a[28] === 3;       // mauvais état (humidité, traces)
-  var peinturesVetustes = a[28] >= 2;        // à rafraîchir ou pire
-  var peinturesOK       = a[28] <= 1;        // premium ou bon état => PAS de levier peintures
-  var cuisineAModern    = a[29] === 2;       // à moderniser
-  var cuisineARefaire   = a[29] === 3;       // à refaire entièrement
-  var cuisineAncienne   = a[29] >= 2;        // à moderniser ou pire
-  var cuisineOK         = a[29] <= 1;        // haut gamme ou fonctionnelle => pas de levier
-  var sdbVieillissante  = a[30] === 2;       // vieillissante (>10 ans)
-  var sdbVetuste        = a[30] === 3;       // vétuste (baignoire fonte)
-  var sdbMauvaise       = a[30] >= 2;        // vieillissante ou pire
-  var sdbOK             = a[30] <= 1;        // rénovée ou bon état => pas de levier sdb
-  var simpleVitrage     = a[31] === 3;       // simple vitrage d'origine
-  var doubleAncien      = a[31] === 2;       // double vitrage ancien
-  var huissMauv         = a[31] >= 2;        // double ancien ou simple vitrage
-  var huissOK           = a[31] <= 1;        // triple ou double récent => pas de levier
-  var comblesAucun      = a[32] === 3;       // aucune isolation
-  var comblesMinimal    = a[32] === 2;       // minimal
-  var comblesMalIsoles  = a[32] >= 2;        // minimal ou aucun
-  var comblesOK         = a[32] <= 1;        // isolé récent ou ancien => pas de levier
-  var toitureUrgente    = a[33] === 3;       // infiltrations — urgent
-  var toitureTravaux    = a[33] === 2;       // travaux dans 5 ans
-  var toitureMauvaise   = a[33] >= 2;        // travaux à prévoir ou urgent
-  var toitureOK         = a[33] <= 1;        // récente ou bon état => pas de levier
-  var plombMauv         = a[34] >= 2;        // partiellement vétuste ou plomb
-  var plombUrgent       = a[34] === 3;       // plomb/galvanisé
-  var elecNonConf       = a[35] >= 2;        // partiel ou ancienne installation
-  var elecUrgent        = a[35] === 3;       // fusibles, pas de terre
-  var elecOK            = a[35] <= 1;        // aux normes ou probable ok => pas de levier
+  // ── Terrain & extérieurs ──────────────────────────────────
+  var jardinFriche      = a[21] === 3;      // friche
+  var jardinNonAmenage  = a[21] >= 2;       // non aménagé ou friche → levier actif
+  var jardinOK          = a[21] <= 1;       // arboré (0) ou entretenu (1) → PAS de levier
 
-  // ── Énergie ──
-  var dpeA_C            = a[37] <= 2;        // A, B ou C => pas de levier DPE
-  var dpeD              = a[37] === 3;       // D — amélioration possible
-  var dpeE              = a[37] === 4;       // E — attention
-  var dpeFG             = a[37] === 5;       // F ou G — passoire thermique
-  var dpePassable       = a[37] >= 3;        // D ou pire
-  var dpeMauvais        = a[37] >= 4;        // E, F ou G
-  var chauffConvec      = a[38] === 2;       // convecteurs électriques
-  var chauffFioul       = a[38] === 3;       // fioul/poêle principal
-  var chauffMauvais     = a[38] >= 2;        // convecteurs ou fioul
-  var chauffOK          = a[38] <= 1;        // PAC ou gaz condensation => pas de levier
-  var confortEteNul     = a[41] === 3;       // inconfort estival avéré
-  var factureLourde     = a[42] >= 2;        // > 1500€/an
-  var factureOK         = a[42] <= 1;        // < 1500€ => pas de levier facture
+  // ── État général & travaux ────────────────────────────────
+  var solMauvais        = a[28] === 3;      // moquette/carrelage 80s
+  var solPassable       = a[28] >= 2;       // stratifié ou pire
+  var solOK             = a[28] <= 1;       // parquet massif/contrecollé → PAS de levier
+  var peinturesARafr    = a[29] === 2;      // à rafraîchir
+  var peinturesMauv     = a[29] === 3;      // mauvais / humidité
+  var peinturesVetustes = a[29] >= 2;       // à rafraîchir ou pire → levier actif
+  var peinturesOK       = a[29] <= 1;       // premium ou bon état → PAS de levier
+  var cuisineAModern    = a[30] === 2;      // à moderniser
+  var cuisineARefaire   = a[30] === 3;      // à refaire
+  var cuisineAncienne   = a[30] >= 2;       // à moderniser ou pire → levier actif
+  var cuisineOK         = a[30] <= 1;       // haut gamme ou fonctionnelle → PAS de levier
+  var sdbVieillissante  = a[31] === 2;      // vieillissante
+  var sdbVetuste        = a[31] === 3;      // vétuste
+  var sdbMauvaise       = a[31] >= 2;       // vieillissante ou pire → levier actif
+  var sdbOK             = a[31] <= 1;       // rénovée/italienne → PAS de levier
+  var simpleVitrage     = a[32] === 3;      // simple vitrage
+  var doubleAncien      = a[32] === 2;      // double vitrage ancien
+  var huissMauv         = a[32] >= 2;       // double ancien ou simple → levier actif
+  var huissOK           = a[32] <= 1;       // triple ou double récent → PAS de levier
+  var comblesAucun      = a[33] === 3;      // aucune isolation
+  var comblesMinimal    = a[33] === 2;      // minimal
+  var comblesMalIsoles  = a[33] >= 2;       // minimal ou aucun → levier actif
+  var comblesOK         = a[33] <= 1;       // isolé récent/ancien → PAS de levier
+  var toitureUrgente    = a[34] === 3;      // infiltrations
+  var toitureTravaux    = a[34] === 2;      // travaux à prévoir
+  var toitureMauvaise   = a[34] >= 2;       // travaux ou urgent → levier actif
+  var toitureOK         = a[34] <= 1;       // récente ou bon état → PAS de levier
+  var plombMauv         = a[35] >= 2;       // partiellement vétuste ou plomb
+  var plombUrgent       = a[35] === 3;      // plomb/galvanisé
+  var elecNonConf       = a[36] >= 2;       // partiel ou ancienne installation
+  var elecUrgent        = a[36] === 3;      // fusibles, pas de terre
+  var elecOK            = a[36] <= 1;       // aux normes → PAS de levier
 
-  // ── Copropriété (appartement) ──
-  var immeubleDegrade   = a[43] >= 2;        // état moyen ou dégradé
-  var travauxCopro      = a[45] >= 2;        // travaux importants votés ou difficulté
+  // ── Énergie ───────────────────────────────────────────────
+  var dpeA_C            = a[38] <= 2;       // A, B ou C → PAS de levier
+  var dpeD              = a[38] === 3;      // D — amélioration possible
+  var dpeE              = a[38] === 4;      // E — attention
+  var dpeFG             = a[38] === 5;      // F ou G — passoire
+  var dpePassable       = a[38] >= 3;       // D ou pire → levier actif
+  var dpeMauvais        = a[38] >= 4;       // E, F ou G
+  var chauffConvec      = a[39] === 2;      // convecteurs électriques
+  var chauffFioul       = a[39] === 3;      // fioul/poêle
+  var chauffMauvais     = a[39] >= 2;       // convecteurs ou fioul → levier actif
+  var chauffOK          = a[39] <= 1;       // PAC ou gaz condensation → PAS de levier
+  var confortEteNul     = a[42] === 3;      // inconfort estival avéré
+  var factureLourde     = a[43] >= 2;       // > 1500€/an → levier actif
+  var factureOK         = a[43] <= 1;       // < 1500€ → PAS de levier
 
-  // ── Standing & finitions ──
-  var finitionsBasses   = a[48] >= 2;        // standard ou bas coût
-  var finitionsOK       = a[48] <= 1;        // haut gamme ou bon standing
-  var bienSombre        = a[49] === 3;       // sombre (nord, vis-à-vis)
-  var rangementNul      = a[51] >= 3;        // aucun rangement intégré
+  // ── Copropriété (appartement) ─────────────────────────────
+  var immeubleDegrade   = a[44] >= 2;       // état moyen ou dégradé
+  var travauxCopro      = a[46] >= 2;       // travaux importants votés
+
+  // ── Standing & finitions ──────────────────────────────────
+  var finitionsBasses   = a[49] >= 2;       // standard ou bas coût
+  var finitionsOK       = a[49] <= 1;       // haut gamme ou bon standing
+  var bienSombre        = a[50] === 3;      // sombre (nord, vis-à-vis)
+  var rangementNul      = a[52] >= 3;       // aucun rangement intégré
 
   // ── Poids de priorité pour tri ──
   var poids = { Critique:0, Excellent:1, 'Tres bon':2, Bon:3 };
@@ -1062,9 +1069,9 @@ async function generatePDF() {
   const methodeFacteurs = [
     'Prix DVF de reference : base notariale officielle 2020-2025',
     'Ajustement etat (+/-12%) : ' + (s.etat >= 65 ? 'Bien en bon etat — bande haute' : s.etat >= 40 ? 'Etat correct — bande mediane' : 'Travaux a prevoir — bande basse'),
-    'Coef. localisation (x'+((0.88+(s.localisation/100)*0.24).toFixed(2))+') : score quartier/transport/services',
-    'Coef. energie (x'+((0.89+(s.energie/100)*0.16).toFixed(2))+') : DPE et performance thermique',
-    'Coef. standing (x'+((0.92+(s.standing/100)*0.16).toFixed(2))+') : finitions et materiaux',
+    'Coef. localisation (x'+((0.92+(s.localisation/100)*0.16).toFixed(2))+') : score quartier/transport/services',
+    'Coef. energie (x'+((0.91+(s.energie/100)*0.13).toFixed(2))+') : DPE et performance thermique',
+    'Coef. standing (x'+((0.94+(s.standing/100)*0.12).toFixed(2))+') : finitions et materiaux',
   ];
   const mw = (W-40)/2;  // 2 colonnes méthode, marge bord droite
   methodeFacteurs.slice(0,4).forEach((f,i) => {
