@@ -1066,7 +1066,7 @@ async function generatePDF() {
     'Coef. energie (x'+((0.89+(s.energie/100)*0.16).toFixed(2))+') : DPE et performance thermique',
     'Coef. standing (x'+((0.92+(s.standing/100)*0.16).toFixed(2))+') : finitions et materiaux',
   ];
-  const mw = (W-36)/2;
+  const mw = (W-40)/2;  // 2 colonnes méthode, marge bord droite
   methodeFacteurs.slice(0,4).forEach((f,i) => {
     const mx = 20 + (i%2)*(mw+4);
     const my = liqY + 12 + Math.floor(i/2)*6;
@@ -1115,7 +1115,7 @@ async function generatePDF() {
   // En-têtes tableau
   const rowH2 = 11;
   rr(14, liqY, W-28, 8, 1, [32,28,16], null);
-  [['DATE',14],['SURF.',52],['PIECES',72],['PRIX VENTE',94],['PRIX/m2',138],['ECART MON.',168],['ADRESSE/SECTEUR',195]].forEach(([lbl,x]) => {
+  [['DATE',14],['SURF.',50],['PCES',70],['PRIX VENTE',90],['EUR/m2',134],['VS',162],['ADRESSE/SECTEUR',177]].forEach(([lbl,x]) => {
     t(lbl, x+2, liqY+5.5, 5.5, 'bold', GOLD);
   });
   ln(14, liqY+8, W-14, liqY+8, BG3, 0.3);
@@ -1132,19 +1132,18 @@ async function generatePDF() {
     const ecart  = diff === 0 ? '=' : (diff > 0 ? '+'+diffP+'%' : '-'+diffP+'%');
     const ecartC = diff > 0 ? ORANGE : diff < 0 ? GREEN : TEXT2; // vert si comparable < MonEstim (bien justifié)
 
-    // Barre mini de comparaison
-    const barW = Math.min(Math.abs(diff)/baseM2*60, 12);
-    if (barW > 0.5) {
-      box(168+2, liqY+4, barW, 3, ecartC, null);
-    }
+    // Barre mini de comparaison (dessinée dans le bloc données ci-dessous)
+    const barW = Math.min(Math.abs(diff)/baseM2*60, 10);
 
     t(v.date,              16,  liqY+7.5, 6.5, 'normal', TEXT2);
-    t(v.surface+' m²',     54,  liqY+7.5, 6.5, 'normal', TEXT2);
-    t((v.pieces||'—')+' p.', 74, liqY+7.5, 6.5, 'normal', TEXT2);
-    t(fmt(v.prix)+' €',    96,  liqY+7.5, 7,   'bold',   TEXT);
-    t(fmt(v.prixM2)+' €/m²',140, liqY+7.5, 7,  'bold',   pCol);
-    t(ecart,               170, liqY+7.5, 6.5, 'bold',   ecartC);
-    tw(v.rue,              196, liqY+7.5, 35,  5.5, TEXT3, 3.5);
+    t(v.surface+' m²',     52,  liqY+7.5, 6.5, 'normal', TEXT2);
+    t((v.pieces||'—')+' p.', 72, liqY+7.5, 6.5, 'normal', TEXT2);
+    t(fmt(v.prix)+' €',    92,  liqY+7.5, 7,   'bold',   TEXT);
+    t(fmt(v.prixM2)+' €/m²',136, liqY+7.5, 7,  'bold',   pCol);
+    // Barre écart + valeur compacte
+    if (barW > 0.5) { box(163, liqY+4, barW, 3, ecartC, null); }
+    t(ecart,               163, liqY+9,   5.5, 'bold',   ecartC);
+    tw(v.rue,              178, liqY+7.5, 18,  5, TEXT3, 3.5);
     liqY += rowH2+1;
   });
 
