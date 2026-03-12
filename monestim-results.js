@@ -476,15 +476,218 @@ async function generatePDF() {
   t('En realisant les travaux prioritaires identifies ci-dessous',16,48,6.5,'normal',TEXT3);
 
   // Leviers
-  const leviersAll = [
-    {titre:'Isolation des combles',       gain:'+3 a +6%', cout:'3 000 - 8 000 EUR',   roi:'Excellent', desc:'Poste n1 de deperdition thermique. Ameliore le DPE et valorise immediatement le bien.', cond: safeNum(s.energie)<70},
-    {titre:'Remplacement des huisseries', gain:'+2 a +4%', cout:'8 000 - 18 000 EUR',  roi:'Tres bon',  desc:'Double ou triple vitrage. Impact visuel fort, amelioration DPE significative.', cond: safeNum(s.etat)<72||safeNum(s.energie)<72},
-    {titre:'Renovation salle de bain',    gain:'+2 a +5%', cout:'6 000 - 15 000 EUR',  roi:'Bon',       desc:'Douche a l\'italienne + double vasque. Premier coup de coeur lors des visites.', cond: safeNum(s.etat)<78},
-    {titre:'Mise aux normes electriques', gain:'+1 a +2%', cout:'4 000 - 10 000 EUR',  roi:'Bon',       desc:'Rassure acheteurs et banques. Evite les negociations a la baisse aux diagnostics.', cond: safeNum(s.etat)<75},
-    {titre:'Pompe a chaleur (PAC)',        gain:'+3 a +8%', cout:'10 000 - 20 000 EUR', roi:'Excellent', desc:'Passage DPE E/F vers C/D. Fort impact sur la valeur dans le contexte actuel.', cond: safeNum(s.energie)<60},
-    {titre:'Rafraichissement peintures',  gain:'+1 a +3%', cout:'2 000 - 8 000 EUR',   roi:'Bon',       desc:'Neutraliser les couleurs. Faible cout, fort impact sur la perception generale.', cond: safeNum(s.standing)<70},
+  // Leviers personnalisés selon les réponses exactes du client
+  var a = answers || [];
+
+  // État & travaux
+  var solMauvais          = a[27] >= 3;   // Q27 revêtements sol : 3=moquette/carrelage 80s
+  var solPassable         = a[27] >= 2;   // Q27 : 2=stratifié/standard
+  var peinturesVetustes   = a[28] >= 2;   // Q28 murs : 2=à rafraîchir, 3=mauvais
+  var cuisineAncienne     = a[29] >= 2;   // Q29 cuisine : 2=à moderniser, 3=à refaire
+  var cuisineARefaire     = a[29] === 3;
+  var sdbMauvaise         = a[30] >= 2;   // Q30 sdb : 2=vieillissante, 3=vétuste
+  var sdbVetuste          = a[30] === 3;
+  var huisseriesMauvaises = a[31] >= 2;   // Q31 huisseries : 2=ancien/simple récent
+  var simpleVitrage       = a[31] === 3;  // Q31 : 3=simple vitrage d'origine
+  var comblesMalIsoles    = a[32] >= 2;   // Q32 combles : 2=minimale, 3=aucune
+  var combesNonIsoles     = a[32] === 3;
+  var toitureMauvaise     = a[33] >= 2;   // Q33 toiture : 2=travaux à prévoir, 3=urgent
+  var toitureUrgente      = a[33] === 3;
+  var elecNonConforme     = a[35] >= 2;   // Q35 élec : 2=partiel, 3=ancienne installation
+  // Énergie
+  var dpePassable         = a[38] >= 3;   // Q38 DPE : 3=D, 4=E, 5=F, 6=G
+  var dpeMauvais          = a[38] >= 4;   // Q38 DPE : 4=E ou pire
+  var chauffageMauvais    = a[39] >= 2;   // Q39 chauffage principal : 2=convecteurs, 3=fioul
+  var factureLourde       = a[42] >= 2;   // Q42 facture : 2=1500-2500€, 3=>2500€
+  // Terrain & extérieurs (maison)
+  var jardinFriche        = a[20] === 3;  // Q20 jardin : 3=friche
+  var jardinNonAmenage    = a[20] >= 2;   // Q20 : 2=plat non aménagé
+  var pasTerrassePiscine  = a[22] >= 2;   // Q22 terrasse : 2=petit balcon, 3=aucun
+  // Standing & finitions
+  var finitionsBasses     = a[48] >= 2;   // Q48 matériaux : 2=standard, 3=entrée de gamme
+  var pasDressing         = a[51] >= 2;   // Q51 dressing : 2=quelques rangements, 3=aucun
+  var bienSombre          = a[49] === 3;  // Q49 luminosité : 3=sombre
+  var pasDomotique        = a[53] >= 2;   // Q53 domotique : 2=basique, 3=aucun
+  // Nuisances
+  var nuisancesSonores    = a[54] >= 2;   // Q54 bruit : 2=modéré, 3=fort
+  var pasFibre            = a[57] >= 2;   // Q57 connexion : 2=ADSL, 3=zone blanche
+
+  // ── LEVIERS ENTIEREMENT PERSONNALISES SELON LES REPONSES CLIENT ──
+  // Chaque levier : titre, texte ET gain adaptes a la situation exacte du bien
+
+  // Poids de priorité pour trier (critique d'abord)
+  var poids = {Critique:0, Excellent:1, 'Tres bon':2, Bon:3};
+
+  var leviersAll = [
+
+    // TOITURE
+    {
+      prio: toitureUrgente ? 'Critique' : 'Excellent',
+      titre: toitureUrgente ? 'Toiture — intervention urgente' : 'Toiture — travaux a prevoir',
+      gain:  toitureUrgente ? '+4 a +8%' : '+2 a +4%',
+      cout:  toitureUrgente ? '15 000 - 35 000 EUR' : '5 000 - 15 000 EUR',
+      roi:   toitureUrgente ? 'Critique' : 'Excellent',
+      desc:  toitureUrgente
+        ? 'Infiltrations identifiees sur votre toiture. Tout acheteur serieux fera expertiser ce point. Reparer avant la mise en vente evite une decote de 10 a 20% ou un blocage de la vente.'
+        : 'Toiture en fin de vie detectee. Une renovation avant la vente supprime le principal point de negociation des acheteurs et evite un abattement sur le prix.',
+      cond: toitureMauvaise
+    },
+
+    // ISOLATION COMBLES
+    {
+      prio: combesNonIsoles ? 'Excellent' : 'Tres bon',
+      titre: combesNonIsoles ? 'Isolation des combles — absent' : 'Isolation des combles — a renforcer',
+      gain:  combesNonIsoles ? '+4 a +7%' : '+2 a +4%',
+      cout:  '3 000 - 8 000 EUR',
+      roi:   'Excellent',
+      desc:  combesNonIsoles
+        ? 'Aucune isolation des combles detectee. Poste n1 de deperdition thermique. Travaux en 2 jours (laine soufflee), impact DPE immediat, valorisation directe pour un cout tres accessible.'
+        : 'Isolation insuffisante ou ancienne detectee. Renforcement a 30 cm minimum : ameliore le DPE, reduit la facture energetique communiquee aux acheteurs et leve un frein a la negociation.',
+      cond: comblesMalIsoles
+    },
+
+    // DPE / CHAUFFAGE
+    {
+      prio: dpeMauvais ? 'Excellent' : 'Tres bon',
+      titre: dpeMauvais ? 'Passoire thermique — DPE E/F/G' : 'Amelioration DPE — classe D',
+      gain:  dpeMauvais ? '+6 a +12%' : '+2 a +5%',
+      cout:  dpeMauvais ? '15 000 - 35 000 EUR' : '8 000 - 20 000 EUR',
+      roi:   'Excellent',
+      desc:  dpeMauvais
+        ? 'DPE E, F ou G identifie sur votre bien. Depuis la loi Climat 2021 les acheteurs decotent 10 a 15% sur les passoires thermiques. Installation PAC + isolation : investissement rentabilise des la vente.'
+        : 'DPE classe D ameliorable. Pompe a chaleur ou isolation renforcee pour atteindre la classe C : prime de 4 a 8% sur le marche. Fort argument commercial face aux acheteurs sensibles a la facture energetique.',
+      cond: dpePassable || chauffageMauvais || factureLourde
+    },
+
+    // FENETRES / HUISSERIES
+    {
+      prio: simpleVitrage ? 'Excellent' : 'Tres bon',
+      titre: simpleVitrage ? 'Fenetres simple vitrage — a remplacer' : 'Modernisation des huisseries',
+      gain:  simpleVitrage ? '+3 a +6%' : '+2 a +4%',
+      cout:  simpleVitrage ? '10 000 - 22 000 EUR' : '5 000 - 12 000 EUR',
+      roi:   'Tres bon',
+      desc:  simpleVitrage
+        ? 'Simple vitrage d\'origine detecte. Deperditions thermiques majeures, DPE plombe, inconfort acoustique. Les acheteurs negocient 8 a 15% sur ce seul point. Remplacement en double ou triple vitrage : argument de vente decisif.'
+        : 'Double vitrage ancien identifie. Remplacement par menuiseries PVC ou alu thermolaque : impact visuel immediat, gain thermique significatif et modernisation de la facade.',
+      cond: huisseriesMauvaises
+    },
+
+    // SALLE DE BAIN
+    {
+      prio: sdbVetuste ? 'Excellent' : 'Tres bon',
+      titre: sdbVetuste ? 'Salle de bain — renovation complete' : 'Salle de bain — modernisation',
+      gain:  sdbVetuste ? '+4 a +7%' : '+2 a +5%',
+      cout:  sdbVetuste ? '10 000 - 22 000 EUR' : '5 000 - 12 000 EUR',
+      roi:   'Tres bon',
+      desc:  sdbVetuste
+        ? 'Salle de bain vetuste identifiee (baignoire fonte, faience ancienne). Premier point de blocage lors des visites. Renovation complete avec douche a l\'italienne + double vasque suspendue : coup de coeur immediat.'
+        : 'Salle de bain vieillissante sans douche italienne ni vasque suspendue. Modernisation ciblee : ROI parmi les meilleurs en renovation immobiliere. Peut faire basculer une offre au prix demande.',
+      cond: sdbMauvaise
+    },
+
+    // CUISINE
+    {
+      prio: cuisineARefaire ? 'Tres bon' : 'Bon',
+      titre: cuisineARefaire ? 'Cuisine — renovation complete' : 'Cuisine — modernisation',
+      gain:  cuisineARefaire ? '+3 a +6%' : '+2 a +4%',
+      cout:  cuisineARefaire ? '12 000 - 25 000 EUR' : '5 000 - 14 000 EUR',
+      roi:   'Tres bon',
+      desc:  cuisineARefaire
+        ? 'Cuisine a refaire entierement identifiee. Avec la salle de bain, c\'est la piece qui influe le plus sur la decision d\'achat. Cuisine ouverte equipee moderne : justifie une hausse de prix directe et visible.'
+        : 'Cuisine ancienne a moderniser detectee. Remplacement facades + plan de travail + electromenager encastre : transformation visuelle majeure pour un budget tres maitrise.',
+      cond: cuisineAncienne
+    },
+
+    // SOLS
+    {
+      prio: solMauvais ? 'Tres bon' : 'Bon',
+      titre: solMauvais ? 'Revetements de sol — a remplacer' : 'Valorisation des sols',
+      gain:  solMauvais ? '+2 a +5%' : '+1 a +3%',
+      cout:  solMauvais ? '6 000 - 15 000 EUR' : '3 000 - 8 000 EUR',
+      roi:   'Bon',
+      desc:  solMauvais
+        ? 'Moquette ancienne ou carrelage annees 80 identifie. Remplacement par parquet contrecolle clair ou carrelage grand format : transformation visuelle immediate, sensation d\'espace et de modernite dans toutes les pieces de vie.'
+        : 'Revetements de sol standard identifies. Parquet massif huile ou carrelage grand format dans les pieces principales : valorisation instantanee de la perception du bien par les acheteurs.',
+      cond: solPassable
+    },
+
+    // PEINTURES / MURS
+    {
+      prio: a[28] === 3 ? 'Tres bon' : 'Bon',
+      titre: a[28] === 3 ? 'Remise en etat murs et plafonds' : 'Rafraichissement des peintures',
+      gain:  a[28] === 3 ? '+2 a +4%' : '+1 a +3%',
+      cout:  a[28] === 3 ? '4 000 - 10 000 EUR' : '1 500 - 5 000 EUR',
+      roi:   'Excellent',
+      desc:  a[28] === 3
+        ? 'Murs et plafonds en mauvais etat identifies (fissures, traces d\'humidite). Ragrement + peinture neutre indispensable avant les photos et les visites. Impact direct sur la perception de valeur et le montant de l\'offre.'
+        : 'Peintures a rafraichir detectees. Teintes neutres (blanc casse, gris perle) : faible cout, fort impact. Un acheteur estime inconsciemment un bien fraichement peint 3 a 5% plus cher.',
+      cond: peinturesVetustes
+    },
+
+    // JARDIN
+    {
+      prio: jardinFriche ? 'Tres bon' : 'Bon',
+      titre: jardinFriche ? 'Jardin en friche — remise en etat' : 'Amenagement du jardin',
+      gain:  jardinFriche ? '+3 a +6%' : '+1 a +3%',
+      cout:  jardinFriche ? '2 000 - 8 000 EUR' : '500 - 3 000 EUR',
+      roi:   'Excellent',
+      desc:  jardinFriche
+        ? 'Jardin en friche identifie. Un exterieur neglige fait baisser l\'estimation de 5 a 10% dans l\'esprit des acheteurs avant meme d\'entrer dans le bien. Debroussaillage + engazonnement + arbustes structurants : transformation spectaculaire pour un budget tres accessible.'
+        : 'Jardin plat et non amenage detecte. Plantation de quelques arbustes persistants, vivaces et une bordure propre : l\'exterieur est la premiere impression. ROI exceptionnel pour moins de 2 000 euros.',
+      cond: jardinNonAmenage
+    },
+
+    // ELECTRICITE
+    {
+      prio: 'Bon',
+      titre: 'Mise aux normes electriques',
+      gain:  '+1 a +3%',
+      cout:  '4 000 - 10 000 EUR',
+      roi:   'Bon',
+      desc:  a[35] === 3
+        ? 'Ancienne installation electrique detectee (fusibles, absence de terre). Les diagnostics obligatoires l\'exposeront. Mise aux normes NF C 15-100 avant la vente : leve le frein bancaire et evite une decote systematique de 5 a 10%.'
+        : 'Installation partiellement non conforme identifiee. Mise a niveau du tableau + prises de terre : rassure les acheteurs, facilite l\'accord bancaire et evite les renogociations au compromis.',
+      cond: elecNonConforme
+    },
+
+    // LUMINOSITE
+    {
+      prio: 'Bon',
+      titre: 'Amelioration de la luminosite',
+      gain:  '+1 a +3%',
+      cout:  '500 - 3 000 EUR',
+      roi:   'Excellent',
+      desc:  'Bien identifie comme sombre ou peu expose. Spots encastres LED, grands miroirs strategiques, peintures ultra-blanches : transformation de la perception de l\'espace sans aucun travaux structurels. Impact fort sur les photos d\'annonce.',
+      cond: bienSombre
+    },
+
+    // HOME STAGING (fallback si peu de leviers ou finitions basses)
+    {
+      prio: 'Bon',
+      titre: 'Home staging et depersonnalisation',
+      gain:  '+2 a +5%',
+      cout:  '800 - 3 000 EUR',
+      roi:   'Excellent',
+      desc:  'Bien standard ou a depersonnaliser. Home staging professionnel (meubles epures, deco neutre, desencombrement) : augmente le prix de vente moyen de 3% et reduit le delai de 30%. Le meilleur ROI en immobilier.',
+      cond:  finitionsBasses
+    },
   ];
-  const actifs = leviersAll.filter(l=>l.cond).slice(0,4);
+
+  // Trie par priorité critique → excellent → tres bon → bon
+  leviersAll.sort(function(x,y){ return (poids[x.prio]||3) - (poids[y.prio]||3); });
+
+  var actifs = leviersAll.filter(function(l){ return l.cond; }).slice(0,4);
+
+  // Fallback si le bien est en excellent état
+  if (actifs.length === 0) {
+    actifs.push({
+      titre: 'Home staging professionnel',
+      gain:  '+2 a +5%',
+      cout:  '1 000 - 3 000 EUR',
+      roi:   'Excellent',
+      desc:  'Votre bien est en bon etat general. Un home staging professionnel (depersonnalisation, mise en scene soignee) maximise l\'impact des photos et raccourcit le delai de vente de 30% en moyenne.',
+    });
+  }
 
   let ly = 55;
   actifs.forEach((lev,i) => {
