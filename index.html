@@ -4044,6 +4044,25 @@ async function generatePDF() {
   t('Fourchette basse : '+fmt(p.low)+' EUR',W/2,161,7.5,'normal',TEXT3,'center');
   t('Fourchette haute : '+fmt(p.high)+' EUR',W/2,167,7.5,'normal',TEXT3,'center');
 
+  // ── ENCARTS DÉCOTES (toiture urgente / combles non isolés) ──────────
+  let _alertY = 172;
+  if (p.toitureAlert) {
+    const _decoteT = Math.round(safeNum(p.totalValue) / (1 - safeNum(p.toitureMalus||0)) * safeNum(p.toitureMalus||0) / 1000) * 1000;
+    rr(14, _alertY, W-28, 11, 1, [40,20,14], [220,80,50,0.25], 0.8);
+    box(14, _alertY, 2, 11, ORANGE, null);
+    t('DECOTE APPLIQUEE — TOITURE URGENTE', 18, _alertY+5, 6.5, 'bold', ORANGE);
+    t('-10%  soit  -'+fmt(_decoteT)+' EUR integres dans l\'estimation', 18, _alertY+10, 5.5, 'normal', TEXT2);
+    _alertY += 13;
+  }
+  if (p.comblesAlert) {
+    const _decoteC = Math.round(safeNum(p.totalValue) / (1 - safeNum(p.comblesMalus||0)) * safeNum(p.comblesMalus||0) / 1000) * 1000;
+    rr(14, _alertY, W-28, 11, 1, [30,28,14], [220,160,50,0.2], 0.8);
+    box(14, _alertY, 2, 11, GOLD, null);
+    t('DECOTE APPLIQUEE — ' + p.comblesAlert.label.toUpperCase(), 18, _alertY+5, 6.5, 'bold', GOLD);
+    t('-'+p.comblesAlert.pct+'%  soit  -'+fmt(_decoteC)+' EUR — eligible a 1 EUR via MaPrimeRenov\'', 18, _alertY+10, 5.5, 'normal', TEXT2);
+    _alertY += 13;
+  }
+
   // 3 KPIs
   const kpis = [
     ['SCORE GLOBAL', safeNum(s.global)+'/100', scoreLbl(safeNum(s.global)), scoreCol(s.global)],
@@ -4113,7 +4132,7 @@ async function generatePDF() {
     {nom:'Energie & DPE',        score:safeNum(s.energie),      poids:'17%', desc:'DPE, chauffage, vitrage, isolation'},
     {nom:'Standing & Finitions', score:safeNum(s.standing),     poids:'13%', desc:'Materiaux, luminosite, hauteur, cachet'},
     {nom:'Marche local',         score:safeNum(s.marche),       poids:'11%', desc:'Tension, ventes comparables, developpement'},
-    {nom:'Copropriete/Terrain',  score:safeNum(s.copro||60),    poids:'8%',  desc:'Charges, travaux votes, terrain'},
+    {nom:'Copropriete/Terrain',  score:safeNum(s.copro),        poids:'8%',  desc:'Charges, travaux votes, terrain'},
     {nom:'Juridique',            score:safeNum(s.juridique||65),poids:'5%',  desc:'Occupation, servitudes, taxe fonciere, PLU'},
   ];
 
@@ -4169,12 +4188,12 @@ async function generatePDF() {
 
   // Leviers
   const leviersAll = [
-    {titre:'Isolation des combles',       gain:'+3 a +6%', cout:'3 000 - 8 000 EUR',   roi:'Excellent', desc:'Poste n1 de deperdition thermique. Ameliore le DPE et valorise immediatement le bien.', cond: safeNum(s.energie)<70},
+    {titre:'Isolation des combles',       gain:'+3 a +6%', cout:'3 000 - 8 000 EUR',   roi:'Excellent', desc:'Poste n1 de deperdition thermique. Ameliore le DPE et valorise immediatement le bien.', cond: safeNum(s.etat)<70},
     {titre:'Remplacement des huisseries', gain:'+2 a +4%', cout:'8 000 - 18 000 EUR',  roi:'Tres bon',  desc:'Double ou triple vitrage. Impact visuel fort, amelioration DPE significative.', cond: safeNum(s.etat)<72||safeNum(s.energie)<72},
     {titre:'Renovation salle de bain',    gain:'+2 a +5%', cout:'6 000 - 15 000 EUR',  roi:'Bon',       desc:'Douche a l\'italienne + double vasque. Premier coup de coeur lors des visites.', cond: safeNum(s.etat)<78},
     {titre:'Mise aux normes electriques', gain:'+1 a +2%', cout:'4 000 - 10 000 EUR',  roi:'Bon',       desc:'Rassure acheteurs et banques. Evite les negociations a la baisse aux diagnostics.', cond: safeNum(s.etat)<75},
     {titre:'Pompe a chaleur (PAC)',        gain:'+3 a +8%', cout:'10 000 - 20 000 EUR', roi:'Excellent', desc:'Passage DPE E/F vers C/D. Fort impact sur la valeur dans le contexte actuel.', cond: safeNum(s.energie)<60},
-    {titre:'Rafraichissement peintures',  gain:'+1 a +3%', cout:'2 000 - 8 000 EUR',   roi:'Bon',       desc:'Neutraliser les couleurs. Faible cout, fort impact sur la perception generale.', cond: safeNum(s.standing)<70},
+    {titre:'Rafraichissement peintures',  gain:'+1 a +3%', cout:'2 000 - 8 000 EUR',   roi:'Bon',       desc:'Neutraliser les couleurs. Faible cout, fort impact sur la perception generale.', cond: safeNum(s.etat)<70},
   ];
   const actifs = leviersAll.filter(l=>l.cond).slice(0,4);
 
@@ -4540,13 +4559,13 @@ function renderLeviersInline() {
   if (!lastScores) return;
   const s = lastScores;
   const leviersAll = [
-    { titre:'Isolation des combles', gain:'+3 à +6%', cout:'3 000 – 8 000 €', condition: s.energie < 70 },
+    { titre:'Isolation des combles', gain:'+3 à +6%', cout:'3 000 – 8 000 €', condition: s.etat < 70 },
     { titre:'Remplacement des huisseries', gain:'+2 à +4%', cout:'8 000 – 18 000 €', condition: s.etat < 72 || s.energie < 72 },
     { titre:'Rénovation salle de bain', gain:'+2 à +5%', cout:'6 000 – 15 000 €', condition: s.etat < 78 },
     { titre:'Mise aux normes électriques', gain:'+1 à +2%', cout:'4 000 – 10 000 €', condition: s.etat < 75 },
     { titre:'Pompe à chaleur (PAC)', gain:'+3 à +8%', cout:'10 000 – 20 000 €', condition: s.energie < 60 },
-    { titre:'Rafraîchissement peintures & sols', gain:'+1 à +3%', cout:'2 000 – 8 000 €', condition: s.standing < 70 },
-    { titre:'Aménagement jardin / extérieur', gain:'+1 à +4%', cout:'1 000 – 6 000 €', condition: s.standing < 75 },
+    { titre:'Rafraîchissement peintures & sols', gain:'+1 à +3%', cout:'2 000 – 8 000 €', condition: s.etat < 70 },
+    { titre:'Aménagement jardin / extérieur', gain:'+1 à +4%', cout:'1 000 – 6 000 €', condition: s.copro < 75 },
   ];
   const actifs = leviersAll.filter(l => l.condition).slice(0, 4);
   const wrap = document.getElementById('leviers-inline');
