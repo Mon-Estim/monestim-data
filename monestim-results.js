@@ -433,6 +433,28 @@ async function generatePDF() {
   t('Fourchette basse : '+fmt(p.low)+' EUR',W/2,161,7.5,'normal',TEXT3,'center');
   t('Fourchette haute : '+fmt(p.high)+' EUR',W/2,167,7.5,'normal',TEXT3,'center');
 
+  // ── ENCART DÉCOTE TOITURE (affiché uniquement si toitureMauvaise) ───
+  if (p.toitureAlert) {
+    const ta = p.toitureAlert;
+    const decoteMontant = Math.round(safeNum(p.totalValue) / (1 - safeNum(p.toitureMalus,0)) * safeNum(p.toitureMalus,0) / 1000) * 1000;
+    rr(14, 172, W-28, 12, 1, [40,20,14], [220,80,50,0.25], 0.8);
+    box(14, 172, 2, 12, ORANGE, null);
+    t('⚠ DECOTE APPLIQUEE — ' + ta.label.toUpperCase(), 20, 177, 6.5, 'bold', ORANGE);
+    t('-10% soit -'+fmt(decoteMontant)+' EUR integres dans l\'estimation', 20, 182.5, 5.5, 'normal', TEXT2);
+    t('Refaire la toiture peut recuperer cette decote complete', W-16, 182.5, 5.5, 'normal', TEXT3, 'right');
+  }
+
+  // ── ENCART DÉCOTE COMBLES ────────────────────────────────────────────
+  if (p.comblesAlert) {
+    const ca = p.comblesAlert;
+    const yC = p.toitureAlert ? 187 : 172;
+    const decoteC = Math.round(safeNum(p.totalValue) / (1 - safeNum(p.comblesMalus,0)) * safeNum(p.comblesMalus,0) / 1000) * 1000;
+    rr(14, yC, W-28, 12, 1, [30,28,14], [220,160,50,0.2], 0.8);
+    box(14, yC, 2, 12, GOLD, null);
+    t('⚠ DECOTE APPLIQUEE — ' + ca.label.toUpperCase(), 20, yC+5, 6.5, 'bold', GOLD);
+    t('-'+ca.pct+'% soit -'+fmt(decoteC)+' EUR — mais isolation eligible a 1 EUR (MaPrimeRenov\')', 20, yC+10.5, 5.5, 'normal', TEXT2);
+  }
+
   // 3 KPIs
   const kpis = [
     ['SCORE GLOBAL', safeNum(s.global)+'/100', scoreLbl(safeNum(s.global)), scoreCol(s.global)],
@@ -485,13 +507,13 @@ async function generatePDF() {
   ln(14,25,W-14,25,BG3,0.3);
 
   const dims7 = [
-    { key:'localisation', label:'Localisation',      icon:'📍', poids:'26%' },
-    { key:'bien',         label:'Type & Structure',   icon:'🏠', poids:'18%' },
-    { key:'etat',         label:'État & Travaux',     icon:'🔧', poids:'20%' },
-    { key:'exterieur',    label:'Terrain & Extér.',   icon:'🌳', poids:'12%' },
-    { key:'marche',       label:'Marché local',       icon:'📊', poids:'14%' },
-    { key:'environnement',label:'Environnement',      icon:'🏢', poids:'6%'  },
-    { key:'fiscal',       label:'Juridique & Fiscal', icon:'⚖️', poids:'4%'  },
+    { key:'localisation', label:'Localisation',       icon:'📍', poids:'26%' },
+    { key:'etat',         label:'État & Travaux',      icon:'🔧', poids:'20%' },
+    { key:'energie',      label:'Énergie & DPE',       icon:'⚡', poids:'17%' },
+    { key:'standing',     label:'Standing & Atouts',   icon:'🏠', poids:'13%' },
+    { key:'marche',       label:'Marché local',        icon:'📊', poids:'11%' },
+    { key:'copro',        label:'Copro / Terrain',     icon:'🌳', poids:'8%'  },
+    { key:'juridique',    label:'Juridique & Fiscal',  icon:'⚖️', poids:'5%'  },
   ];
 
   let d7y = 30;
@@ -504,8 +526,17 @@ async function generatePDF() {
 
     rr(14, d7y, W-28, 26, 2, bgRow, null);
 
+    // Label adapté selon type de bien pour la dimension copro
+    let label = dim.label;
+    if (dim.key === 'copro') {
+      label = (p.typeBien === 1) ? 'Copropriété' : 'Terrain & Extérieurs';
+    }
+    if (dim.key === 'standing') {
+      label = (p.typeBien === 1) ? 'Standing & Atouts' : 'Standing & Atouts';
+    }
+
     // Icône + label
-    t(dim.label, 22, d7y + 9, 9, 'bold', TEXT);
+    t(label, 22, d7y + 9, 9, 'bold', TEXT);
     t('Poids : ' + dim.poids, 22, d7y + 17, 7, 'normal', TEXT3);
 
     // Score
@@ -606,67 +637,67 @@ async function generatePDF() {
   // Q49=matériaux/finitions  Q50=luminosité  Q52=rangements  Q76=urgence
 
   // ── Terrain & extérieurs ──────────────────────────────────
-  var jardinFriche      = a[21] === 3;      // friche
-  var jardinNonAmenage  = a[21] >= 2;       // non aménagé ou friche → levier actif
-  var jardinOK          = a[21] <= 1;       // arboré (0) ou entretenu (1) → PAS de levier
+  var jardinFriche      = a[20] === 3;      // friche
+  var jardinNonAmenage  = a[20] >= 2;       // non aménagé ou friche → levier actif
+  var jardinOK          = a[20] <= 1;       // arboré (0) ou entretenu (1) → PAS de levier
 
   // ── État général & travaux ────────────────────────────────
-  var solMauvais        = a[28] === 3;      // moquette/carrelage 80s
-  var solPassable       = a[28] >= 2;       // stratifié ou pire
-  var solOK             = a[28] <= 1;       // parquet massif/contrecollé → PAS de levier
-  var peinturesARafr    = a[29] === 2;      // à rafraîchir
-  var peinturesMauv     = a[29] === 3;      // mauvais / humidité
-  var peinturesVetustes = a[29] >= 2;       // à rafraîchir ou pire → levier actif
-  var peinturesOK       = a[29] <= 1;       // premium ou bon état → PAS de levier
-  var cuisineAModern    = a[30] === 2;      // à moderniser
-  var cuisineARefaire   = a[30] === 3;      // à refaire
-  var cuisineAncienne   = a[30] >= 2;       // à moderniser ou pire → levier actif
-  var cuisineOK         = a[30] <= 1;       // haut gamme ou fonctionnelle → PAS de levier
-  var sdbVieillissante  = a[31] === 2;      // vieillissante
-  var sdbVetuste        = a[31] === 3;      // vétuste
-  var sdbMauvaise       = a[31] >= 2;       // vieillissante ou pire → levier actif
-  var sdbOK             = a[31] <= 1;       // rénovée/italienne → PAS de levier
-  var simpleVitrage     = a[32] === 3;      // simple vitrage
-  var doubleAncien      = a[32] === 2;      // double vitrage ancien
-  var huissMauv         = a[32] >= 2;       // double ancien ou simple → levier actif
-  var huissOK           = a[32] <= 1;       // triple ou double récent → PAS de levier
-  var comblesAucun      = a[33] === 3;      // aucune isolation
-  var comblesMinimal    = a[33] === 2;      // minimal
-  var comblesMalIsoles  = a[33] >= 2;       // minimal ou aucun → levier actif
-  var comblesOK         = a[33] <= 1;       // isolé récent/ancien → PAS de levier
-  var toitureUrgente    = a[34] === 3;      // infiltrations
-  var toitureTravaux    = a[34] === 2;      // travaux à prévoir
-  var toitureMauvaise   = a[34] >= 2;       // travaux ou urgent → levier actif
-  var toitureOK         = a[34] <= 1;       // récente ou bon état → PAS de levier
-  var plombMauv         = a[35] >= 2;       // partiellement vétuste ou plomb
-  var plombUrgent       = a[35] === 3;      // plomb/galvanisé
-  var elecNonConf       = a[36] >= 2;       // partiel ou ancienne installation
-  var elecUrgent        = a[36] === 3;      // fusibles, pas de terre
-  var elecOK            = a[36] <= 1;       // aux normes → PAS de levier
+  var solMauvais        = a[27] === 3;      // moquette/carrelage 80s
+  var solPassable       = a[27] >= 2;       // stratifié ou pire
+  var solOK             = a[27] <= 1;       // parquet massif/contrecollé → PAS de levier
+  var peinturesARafr    = a[28] === 2;      // à rafraîchir
+  var peinturesMauv     = a[28] === 3;      // mauvais / humidité
+  var peinturesVetustes = a[28] >= 2;       // à rafraîchir ou pire → levier actif
+  var peinturesOK       = a[28] <= 1;       // premium ou bon état → PAS de levier
+  var cuisineAModern    = a[29] === 2;      // à moderniser
+  var cuisineARefaire   = a[29] === 3;      // à refaire
+  var cuisineAncienne   = a[29] >= 2;       // à moderniser ou pire → levier actif
+  var cuisineOK         = a[29] <= 1;       // haut gamme ou fonctionnelle → PAS de levier
+  var sdbVieillissante  = a[30] === 2;      // vieillissante
+  var sdbVetuste        = a[30] === 3;      // vétuste
+  var sdbMauvaise       = a[30] >= 2;       // vieillissante ou pire → levier actif
+  var sdbOK             = a[30] <= 1;       // rénovée/italienne → PAS de levier
+  var simpleVitrage     = a[31] === 3;      // simple vitrage
+  var doubleAncien      = a[31] === 2;      // double vitrage ancien
+  var huissMauv         = a[31] >= 2;       // double ancien ou simple → levier actif
+  var huissOK           = a[31] <= 1;       // triple ou double récent → PAS de levier
+  var comblesAucun      = a[32] === 3;      // aucune isolation
+  var comblesMinimal    = a[32] === 2;      // minimal
+  var comblesMalIsoles  = a[32] >= 2;       // minimal ou aucun → levier actif
+  var comblesOK         = a[32] <= 1;       // isolé récent/ancien → PAS de levier
+  var toitureUrgente    = a[33] === 3;      // infiltrations
+  var toitureTravaux    = a[33] === 2;      // travaux à prévoir
+  var toitureMauvaise   = a[33] >= 2;       // travaux ou urgent → levier actif
+  var toitureOK         = a[33] <= 1;       // récente ou bon état → PAS de levier
+  var plombMauv         = a[34] >= 2;       // partiellement vétuste ou plomb
+  var plombUrgent       = a[34] === 3;      // plomb/galvanisé
+  var elecNonConf       = a[35] >= 2;       // partiel ou ancienne installation
+  var elecUrgent        = a[35] === 3;      // fusibles, pas de terre
+  var elecOK            = a[35] <= 1;       // aux normes → PAS de levier
 
   // ── Énergie ───────────────────────────────────────────────
-  var dpeA_C            = a[38] <= 2;       // A, B ou C → PAS de levier
-  var dpeD              = a[38] === 3;      // D — amélioration possible
-  var dpeE              = a[38] === 4;      // E — attention
-  var dpeFG             = a[38] === 5;      // F ou G — passoire
-  var dpePassable       = a[38] >= 3;       // D ou pire → levier actif
-  var dpeMauvais        = a[38] >= 4;       // E, F ou G
-  var chauffConvec      = a[39] === 2;      // convecteurs électriques
-  var chauffFioul       = a[39] === 3;      // fioul/poêle
-  var chauffMauvais     = a[39] >= 2;       // convecteurs ou fioul → levier actif
-  var chauffOK          = a[39] <= 1;       // PAC ou gaz condensation → PAS de levier
+  var dpeA_C            = a[37] <= 2;       // A, B ou C → PAS de levier
+  var dpeD              = a[37] === 3;      // D — amélioration possible
+  var dpeE              = a[37] === 4;      // E — attention
+  var dpeFG             = a[37] === 5;      // F ou G — passoire
+  var dpePassable       = a[37] >= 3;       // D ou pire → levier actif
+  var dpeMauvais        = a[37] >= 4;       // E, F ou G
+  var chauffConvec      = a[38] === 2;      // convecteurs électriques
+  var chauffFioul       = a[38] === 3;      // fioul/poêle
+  var chauffMauvais     = a[38] >= 2;       // convecteurs ou fioul → levier actif
+  var chauffOK          = a[38] <= 1;       // PAC ou gaz condensation → PAS de levier
   var confortEteNul     = a[42] === 3;      // inconfort estival avéré
-  var factureLourde     = a[43] >= 2;       // > 1500€/an → levier actif
-  var factureOK         = a[43] <= 1;       // < 1500€ → PAS de levier
+  var factureLourde     = a[42] >= 2;       // > 1500€/an → levier actif
+  var factureOK         = a[42] <= 1;       // < 1500€ → PAS de levier
 
   // ── Copropriété (appartement) ─────────────────────────────
-  var immeubleDegrade   = a[44] >= 2;       // état moyen ou dégradé
+  var immeubleDegrade   = a[43] >= 2;       // état moyen ou dégradé
   var travauxCopro      = a[46] >= 2;       // travaux importants votés
 
   // ── Standing & finitions ──────────────────────────────────
-  var finitionsBasses   = a[49] >= 2;       // standard ou bas coût
-  var finitionsOK       = a[49] <= 1;       // haut gamme ou bon standing
-  var bienSombre        = a[50] === 3;      // sombre (nord, vis-à-vis)
+  var finitionsBasses   = a[48] >= 2;       // standard ou bas coût
+  var finitionsOK       = a[48] <= 1;       // haut gamme ou bon standing
+  var bienSombre        = a[49] === 3;      // sombre (nord, vis-à-vis)
   var rangementNul      = a[52] >= 3;       // aucun rangement intégré
 
   // ── Poids de priorité pour tri ──
@@ -678,14 +709,14 @@ async function generatePDF() {
     // TOITURE (maison seulement — Q33)
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     {
-      prio:  toitureUrgente ? 'Critique' : 'Excellent',
+      prio:  toitureUrgente ? 'Critique' : 'Important',
       titre: toitureUrgente ? 'Toiture — intervention urgente' : 'Toiture — travaux a prevoir',
-      gain:  toitureUrgente ? '+4 a +8%' : '+2 a +4%',
-      cout:  toitureUrgente ? '15 000 - 35 000 EUR' : '5 000 - 15 000 EUR',
-      roi:   toitureUrgente ? 'Critique' : 'Excellent',
+      gain:  toitureUrgente ? '+10% (decote appliquee)' : '+2 a +4%',
+      cout:  toitureUrgente ? '15 000 - 50 000 EUR' : '3 000 - 15 000 EUR',
+      roi:   toitureUrgente ? 'Critique' : 'Bon',
       desc:  toitureUrgente
-        ? 'Infiltrations identifiees. Tout acheteur serieux fera expertiser ce point — decote systematique de 10 a 20% ou vente bloquee. Intervention avant la mise en vente obligatoire.'
-        : 'Toiture en fin de vie identifiee. Renovation ou remplacement partiel avant la vente : supprime le principal point de negociation et facilite l\'accord bancaire de l\'acheteur.',
+        ? 'Infiltrations identifiees — une decote de 10% a ete appliquee sur votre estimation. Tout acheteur serieux fera expertiser ce point. Refaire la toiture avant la mise en vente supprime ce levier de negociation et peut recuperer la totalite de la decote.'
+        : 'Entretien ou remplacement partiel a prevoir (quelques ardoises, faitage, mousses). Aucune decote appliquee sur votre prix — mais un acheteur averti le signalera en negociation. Anticiper ce poste renforce votre position.',
       cond: isMaison && toitureMauvaise
     },
 
@@ -693,14 +724,14 @@ async function generatePDF() {
     // ISOLATION COMBLES (maison seulement — Q32)
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     {
-      prio:  comblesAucun ? 'Excellent' : 'Tres bon',
+      prio:  comblesAucun ? 'Critique' : 'Excellent',
       titre: comblesAucun ? 'Isolation des combles — absente' : 'Isolation des combles — a renforcer',
-      gain:  comblesAucun ? '+4 a +7%' : '+2 a +4%',
-      cout:  '3 000 - 8 000 EUR',
-      roi:   'Excellent',
+      gain:  comblesAucun ? '+5% (decote appliquee) — cout proche de 1 EUR' : '+3% (decote appliquee) — cout proche de 1 EUR',
+      cout:  '1 EUR via MaPrimeRenov\' + CEE',
+      roi:   'Exceptionnel',
       desc:  comblesAucun
-        ? 'Aucune isolation des combles identifiee. Poste n°1 de deperdition thermique. Travaux rapides (2 jours, laine soufflee), impact DPE immediat, forte valorisation pour un cout tres accessible.'
-        : 'Isolation insuffisante ou ancienne identifiee. Renforcement a 30 cm minimum : ameliore le DPE, reduit la facture energetique affichee aux acheteurs et leve un frein a la negociation.',
+        ? 'Combles non isoles — une decote de 5% a ete appliquee sur votre estimation. Bonne nouvelle : l\'isolation des combles est eligible au dispositif gouvernemental MaPrimeRenov\' + CEE qui ramene le cout a 1 EUR pour les menages eligibles. Travaux en 1 journee. Recuperez la totalite de la decote pour un investissement quasi nul.'
+        : 'Isolation insuffisante — une decote de 3% a ete appliquee. Renforcement eligible aux aides MaPrimeRenov\' (cout reduit a 1 EUR selon eligibilite). Ameliore le DPE, reduit la facture energetique et leve un frein a la negociation acheteur.',
       cond: isMaison && comblesMalIsoles
     },
 
@@ -847,12 +878,12 @@ async function generatePDF() {
     // ETAT IMMEUBLE COPROPRIETE (appartement seulement — Q43)
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     {
-      prio:  a[43] === 3 ? 'Excellent' : 'Tres bon',
-      titre: a[43] === 3 ? 'Immeuble degrade — frein a la vente' : 'Etat de l\'immeuble — a surveiller',
-      gain:  a[43] === 3 ? '+3 a +6%' : '+1 a +3%',
+      prio:  a[42] === 3 ? 'Excellent' : 'Tres bon',
+      titre: a[42] === 3 ? 'Immeuble degrade — frein a la vente' : 'Etat de l\'immeuble — a surveiller',
+      gain:  a[42] === 3 ? '+3 a +6%' : '+1 a +3%',
       cout:  'Variable (quote-part syndic)',
       roi:   'Tres bon',
-      desc:  a[43] === 3
+      desc:  a[42] === 3
         ? 'Immeuble degrade identifie avec travaux importants votes ou a venir. Les acheteurs et les banques penalisent fortement ce point. Participation active au syndic pour accelérer les travaux avant la mise en vente.'
         : 'Etat moyen de l\'immeuble detecte. Des travaux de facade ou de parties communes a venir peuvent peser sur le prix de vente. Bien anticiper et communiquer sur les charges previsionnelles aux acheteurs.',
       cond: isAppart && immeubleDegrade

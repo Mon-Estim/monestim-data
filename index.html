@@ -2198,10 +2198,10 @@ const questions = [
   { section:"⚡ Énergie & DPE", text:"Quel est le DPE (Diagnostic de Performance Énergétique) ?", hint:"Depuis 2025, un bien classé F ou G ne peut plus être loué. Les acheteurs le savent.", type:"options", cols:3, options:[
     {icon:"🟢",label:"A (< 70 kWh/m²)", val:1.18},
     {icon:"🟢",label:"B (70-110 kWh/m²)", val:1.12},
-    {icon:"🟡",label:"C (110-180 kWh/m²)", val:1.06},
+    {icon:"🟡",label:"C (110-180 kWh/m²)", val:1.04},
     {icon:"🟡",label:"D (180-250 kWh/m²)", val:1.0},
-    {icon:"🟠",label:"E (250-330 kWh/m²)", val:0.92},
-    {icon:"🔴",label:"F ou G (passoire thermique)", val:0.80}
+    {icon:"🟠",label:"E (250-330 kWh/m²)", val:0.96},
+    {icon:"🔴",label:"F ou G (passoire thermique)", val:0.76}
   ]},
 
   { section:"⚡ Énergie & DPE", text:"Système de chauffage principal ?", hint:"La pompe à chaleur est devenue le standard recherché par les acheteurs en 2026.", type:"options", cols:2, options:[
@@ -2554,7 +2554,7 @@ function isQuestionVisible(q) {
   if (type === null) return false; // Q9 pas encore répondu → cacher toutes les questions conditionnelles
   if (q.showIf === 'loft') return type === 'loft';
   if (q.showIf === 'maison') return type === 'maison' || type === 'loft';
-  if (q.showIf === 'appart') return type === 'appart';
+  if (q.showIf === 'appart' || q.showIf === 'appartement') return type === 'appart';
   return true;
 }
 
@@ -3418,26 +3418,38 @@ function avgScore(indices) {
 }
 
 function computeScores() {
-  // Q0-Q7 : Localisation (Q8 = type de bien, exclu)
-  const scoreLocalisation = avgScore([0,1,2,3,4,5,6,7]);
+  // LOCALISATION : région, commune, distance ville, quartier, transports, commerces, vue, risques
+  // + nuisances sonores (Q54), nuisances olfactives (Q55), voisinage (Q56)
+  const scoreLocalisation = avgScore([0,1,2,3,4,5,6,7,54,55,56]);
 
-  // Q26-Q37 : État & Travaux
-  const scoreEtat = avgScore([26,27,28,29,30,31,32,33,34,35,36,37]);
+  // ÉTAT & TRAVAUX : état général, nb SDB (Q14), niveaux/mitoyenneté maison (Q15,Q16),
+  // année construction (Q25), sols, murs, cuisine, SDB, huisseries,
+  // combles (maison), toiture (maison), plomberie, électricité, travaux récents
+  const scoreEtat = avgScore([14,15,16,25,26,27,28,29,30,31,32,33,34,35,36]);
 
-  // Q38-Q43 : Énergie & DPE
-  const scoreEnergie = avgScore([38,39,40,41,42,43]);
+  // ÉNERGIE & DPE : DPE (Q37), chauffage, appoint, renouvelable, confort été, facture
+  const scoreEnergie = avgScore([37,38,39,40,41,42]);
 
-  // Q44-Q48 : Copropriété / Terrain
-  const scoreCopro = avgScore([44,45,46,47,48]);
+  // COPROPRIÉTÉ (appart) / TERRAIN & EXTÉRIEURS (maison)
+  // avgScore ignore automatiquement les questions invisibles via isQuestionVisible :
+  // → Pour un APPART : Q17 étage, Q18 ascenseur, Q22 terrasse, Q24 parking,
+  //                    Q43-Q47 (immeuble, charges, travaux copro, règlement, services)
+  // → Pour une MAISON : Q19-Q21 terrain/jardin/constructible, Q23 piscine, Q24 parking
+  // Q70 dépendance/atelier visible pour les deux types
+  const scoreCopro = avgScore([17,18,19,20,21,22,23,24,43,44,45,46,47,70]);
 
-  // Q49-Q54 : Standing & Finitions
-  const scoreStanding = avgScore([49,50,51,52,53,54]);
+  // STANDING & ATOUTS : finitions (Q48), luminosité, HSP, rangements, cachet, domotique,
+  // fibre (Q57), cave/sous-sol (Q58), loisirs (Q71), bureau (Q72), exposition (Q73)
+  // Q19-Q24 terrain/extérieur retirés → dans scoreCopro/Terrain ci-dessus
+  const scoreStanding = avgScore([48,49,50,51,52,53,57,58,71,72,73]);
 
-  // Q66-Q70 : Marché & Contexte
-  const scoreMarche = avgScore([66,67,68,69,70]);
+  // MARCHÉ : tension marché (Q65), dev/déclin (Q66), potentiel locatif (Q67),
+  // cible acheteur (Q68), nuisances/urbanisme futures (Q69)
+  const scoreMarche = avgScore([65,66,67,68,69]);
 
-  // Q60-Q65 : Juridique & Fiscalité
-  const scoreJuridique = avgScore([60,61,62,63,64,65]);
+  // JURIDIQUE : régime (Q59), libre occupation (Q60), taxe foncière (Q61),
+  // servitudes (Q62), avantages fiscaux (Q63), potentiel extension (Q64)
+  const scoreJuridique = avgScore([59,60,61,62,63,64]);
 
   // Score global pondéré
   const global = Math.round(
@@ -3625,8 +3637,32 @@ function _calculateScores() {
   );
   const basePriceM2  = finalPriceM2; // compatibilité
 
+  // ── MALUS TOITURE (−10% direct, non compensable) ────────────────────
+  // Uniquement si infiltrations avérées (index 3)
+  // "Travaux à prévoir dans 5 ans" (index 2) = entretien préventif, pas de décote
+  const toitureIdx  = answers[33] ?? 1;
+  const toitureMalus = (toitureIdx === 3) ? 0.10 : 0;
+  const toitureAlert = toitureIdx === 3
+    ? { label: 'Toiture à refaire d\'urgence', detail: 'Infiltrations connues — travaux estimés 15 000 à 50 000 €', pct: 10 }
+    : null;
 
-  // Urgence de vente — ajustement stratégique final (hors modèle)
+  // ── MALUS COMBLES (−5% si absents, −3% si minimaux) ─────────────────
+  // Isolation combles = poste n°1 de déperdition thermique (30% des pertes)
+  // Impact direct sur DPE et donc sur la valeur
+  // Contrepartie : isolation à 1€ via MaPrimeRénov' + CEE → ROI exceptionnel
+  const comblesIdx  = answers[32] ?? 1;
+  const comblesMalus = (comblesIdx === 3) ? 0.05 : (comblesIdx === 2) ? 0.03 : 0;
+  const comblesAlert = comblesIdx === 3
+    ? { label: 'Combles non isolés', detail: 'Isolation éligible à 1€ via MaPrimeRénov\' — ROI exceptionnel', pct: 5 }
+    : comblesIdx === 2
+    ? { label: 'Isolation combles minimale', detail: 'Renforcement éligible aux aides MaPrimeRénov\'', pct: 3 }
+    : null;
+
+  // Malus combinés
+  const totalMalus = toitureMalus + comblesMalus;
+  const finalPriceM2Apres = totalMalus > 0 ? Math.round(finalPriceM2 * (1 - totalMalus)) : finalPriceM2;
+
+
   const urgenceIdx   = answers[76] ?? 2;
   const urgenceCoefs = [0.94, 0.97, 1.0, 1.02];
   const urgenceCoef  = urgenceCoefs[urgenceIdx] ?? 1.0;
@@ -3637,15 +3673,17 @@ function _calculateScores() {
     { label: 'Aucune urgence', delaiCible: '6-12 mois', remise: '+1 à 2%',     conseil: "Avec du temps devant vous, affichez légèrement au-dessus du marché pour avoir de la marge de négociation. Un acheteur coup de cœur paiera le prix fort — attendez-le." },
   ];
   const urgenceData  = urgenceLabels[urgenceIdx] ?? urgenceLabels[2];
-  const totalValue      = Math.round(finalPriceM2 * surface / 1000) * 1000;
+  const totalValue      = Math.round(finalPriceM2Apres * surface / 1000) * 1000;
   const prixStrategique = Math.round(totalValue * urgenceCoef / 1000) * 1000;
   const low  = Math.round(totalValue * 0.94 / 1000) * 1000;
   const high = Math.round(totalValue * 1.06 / 1000) * 1000;
   const plusVal = scores.etat < 45 ? '+15 à 28%' : scores.etat < 65 ? '+6 à 14%' : '+2 à 6%';
   const delai   = scores.global > 78 ? '1-2 mois' : scores.global > 60 ? '2-4 mois' : '4-8 mois';
   lastPrix = {
-    totalValue, low, high, finalPriceM2, surface, plusVal, delai,
+    totalValue, low, high, finalPriceM2: finalPriceM2Apres, surface, plusVal, delai,
     prixStrategique, urgenceData, urgenceIdx, typeBien,
+    toitureAlert, toitureMalus,
+    comblesAlert, comblesMalus,
     coefLoc, coefEtat, coefFin, coefEner, coefStand, coefMarch,
     ville: cityInput || 'France',
     typeBienLabel: ['Maison individuelle','Appartement','Maison mitoyenne','Loft / atypique'][typeBienIdx] || 'Bien immobilier',
