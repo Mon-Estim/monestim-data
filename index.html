@@ -3489,132 +3489,142 @@ function _calculateScores() {
   const cityInput = document.getElementById('city-input')?.value || '';
   const prices = getCityPrices(cityInput, typeBien);
   const prixBand = prices[typeBien];
-  let // ═══════════════════════════════════════════════════════════════════════
-  // MOTEUR DE VALORISATION — Moyenne géométrique pondérée par dimension
-  // Chaque question contribue directement via son val (multiplicateur DVF).
-  // Pas de bandes discrètes : chaque réponse tire le prix proportionnellement.
-  // Un critère mauvais ne peut pas être compensé par d'autres bons critères
-  // dans la même dimension — la géométrie garantit l'absence de compensation.
+  // ═══════════════════════════════════════════════════════════════════════
+  // MOTEUR DE VALORISATION — Géométrie pondérée multicritères
+  //
+  // Principe : chaque question a un val (multiplicateur calibré).
+  // La moyenne géométrique pondérée par dimension garantit qu'un seul
+  // critère mauvais tire le prix vers le bas, sans compensation possible
+  // par d'autres critères de la même dimension.
+  // Ancrage : prix DVF médian de la commune (base notariale réelle).
   // ═══════════════════════════════════════════════════════════════════════
 
-  // Récupère le val brut d'une question (1.0 si non répondu)
+  // Val brut d'une question (1.0 si invisible ou non répondu)
   function getVal(qi) {
     const q = questions[qi];
-    if (!q || answers[qi] === null || !isQuestionVisible(q)) return 1.0;
+    if (!q || answers[qi] === null || answers[qi] === undefined || !isQuestionVisible(q)) return 1.0;
     return q.options?.[answers[qi]]?.val ?? 1.0;
   }
 
-  // Moyenne géométrique pondérée : exp(Σ poids_i × ln(val_i))
-  // → un seul val très bas tire fortement le résultat vers le bas
-  function geoPondere(pairesValPoids) {
-    let logSum = 0, poidsTotal = 0;
-    pairesValPoids.forEach(([v, p]) => { logSum += p * Math.log(Math.max(v, 0.50)); poidsTotal += p; });
-    return Math.exp(logSum / poidsTotal);
+  // Moyenne géométrique pondérée
+  // Un val de 0.80 avec poids 0.30 tire le résultat de −6%, indépendamment des autres
+  function geoPond(pairs) {
+    let s = 0, w = 0;
+    pairs.forEach(([v, p]) => { s += p * Math.log(Math.max(v, 0.50)); w += p; });
+    return Math.exp(s / w);
   }
 
-  // Projette un coef brut [valMin..valMax] → [plageMin..plageMax] de marché réel
-  // Calibré sur études notariales DVF 2020-2025 (amplitude réelle observée)
-  function projeter(coefBrut, valMin, valMax, plageMin, plageMax) {
-    const t = Math.max(0, Math.min(1, (coefBrut - valMin) / (valMax - valMin)));
-    return plageMin + t * (plageMax - plageMin);
+  // Projette le coef brut [valMin..valMax] vers la plage réelle de marché [pMin..pMax]
+  // Calibré sur études notariales DVF 2020-2025
+  function proj(c, vMin, vMax, pMin, pMax) {
+    return pMin + Math.max(0, Math.min(1, (c - vMin) / (vMax - vMin))) * (pMax - pMin);
   }
 
-  // ── DIMENSION 1 : LOCALISATION  (poids global 26%) ─────────────────
-  // Q00 région, Q01 commune, Q02 distance ville, Q03 quartier,
-  // Q04 transports, Q05 commerces, Q06 vue, Q07 risques
-  const coefLocBrut = geoPondere([
-    [getVal(0),  0.25], [getVal(1),  0.15], [getVal(2),  0.12], [getVal(3),  0.20],
-    [getVal(4),  0.09], [getVal(5),  0.07], [getVal(6),  0.07], [getVal(7),  0.05],
+  // ── LOCALISATION — poids global 26% ──────────────────────────────────
+  // Drivers : région, type commune, quartier (poids forts)
+  // Accessoires : transports, commerces, vue, risques
+  const gLoc = geoPond([
+    [getVal(0),  0.28], // région — effet le plus structurant
+    [getVal(1),  0.18], // type commune (métropole vs rural)
+    [getVal(3),  0.22], // réputation quartier
+    [getVal(2),  0.12], // distance grande ville
+    [getVal(6),  0.08], // vue / environnement
+    [getVal(4),  0.06], // transports
+    [getVal(5),  0.04], // commerces
+    [getVal(7),  0.02], // risques naturels
   ]);
-  // Plage réelle : −25% (zone risque/rurale isolée) → +25% (Paris/côte/quartier premium)
-  const coefLoc = projeter(coefLocBrut, 0.80, 1.80, 0.75, 1.25);
+  // Plage réelle : −25% (rural isolé / zone risque) → +25% (Paris / côte / quartier premium)
+  const coefLoc = proj(gLoc, 0.80, 1.80, 0.75, 1.25);
 
-  // ── DIMENSION 2 : ÉTAT STRUCTUREL  (poids global 22%) ──────────────
-  // Q27 état général (poids fort — vision globale de l'acheteur)
-  // Q34 toiture (15-50k€ de travaux si mauvaise)
-  // Q35 plomberie, Q36 électricité (sécurité, obligatoire)
-  // Q33 combles/isolation (DPE et thermique)
-  // Q37 travaux récents réalisés (valorise fortement)
-  const coefEtatBrut = geoPondere([
-    [getVal(27), 0.30], // état général — double poids car vision acheteur
-    [getVal(34), 0.22], // toiture — poste le plus cher
-    [getVal(35), 0.15], // plomberie
-    [getVal(36), 0.15], // électricité
-    [getVal(33), 0.10], // combles
-    [getVal(37), 0.08], // travaux récents faits
+  // ── ÉTAT GÉNÉRAL — poids global 24% ──────────────────────────────────
+  // Q26 état global = vision acheteur, amplitude la plus large (0.60-1.20)
+  // Toiture, plomberie, électricité : inclus ici avec leur vrai poids
+  // Toiture : poids 0.20 — c'est le poste de travaux le plus coûteux
+  const gEtat = geoPond([
+    [getVal(26), 0.35], // état général global — vision acheteur (amplitude 0.60-1.20)
+    [getVal(33), 0.20], // toiture (poids fort : 15-50k€ si urgente)
+    [getVal(34), 0.12], // plomberie
+    [getVal(35), 0.10], // électricité
+    [getVal(33), 0.08], // combles / isolation thermique
+    [getVal(36), 0.10], // travaux importants réalisés récemment
+    [getVal(25), 0.05], // année construction
   ]);
   // Plage réelle : −25% (structurellement dégradé) → +15% (tout refait neuf)
-  const coefEtat = projeter(coefEtatBrut, 0.60, 1.20, 0.75, 1.15);
+  const coefEtat = proj(gEtat, 0.60, 1.20, 0.75, 1.15);
 
-  // ── DIMENSION 3 : FINITIONS INTÉRIEURES  (poids global 13%) ────────
-  // Q28 sols, Q29 murs/peintures, Q30 cuisine, Q31 SDB, Q32 huisseries
-  // Chaque élément pèse son importance réelle dans la décision d'achat
-  const coefFinBrut = geoPondere([
-    [getVal(28), 0.18], // sols
-    [getVal(29), 0.17], // murs/peintures
-    [getVal(30), 0.22], // cuisine — critère décisif n°1 des acheteurs
-    [getVal(31), 0.22], // SDB — critère décisif n°2
-    [getVal(32), 0.21], // huisseries (double vitrage OK vs simple : ~1-2%)
+  // ── FINITIONS INTÉRIEURES — poids global 14% ─────────────────────────
+  // Cuisine et SDB : critères #1 et #2 dans la décision d'achat
+  const gFin = geoPond([
+    [getVal(30), 0.25], // cuisine
+    [getVal(31), 0.25], // salle de bain
+    [getVal(27), 0.15], // sols
+    [getVal(28), 0.15], // murs / peintures
+    [getVal(32), 0.12], // huisseries (double→simple ≈ 2% réel)
+    [getVal(37), 0.08], // travaux récents visibles
   ]);
   // Plage réelle : −12% (tout vétuste) → +12% (tout rénové récemment)
-  const coefFin = projeter(coefFinBrut, 0.85, 1.18, 0.88, 1.12);
+  const coefFin = proj(gFin, 0.85, 1.18, 0.88, 1.12);
 
-  // ── DIMENSION 4 : ÉNERGIE / DPE  (poids global 17%) ────────────────
-  // Q38 DPE (poids très fort — loi Climat 2021 : passoire F/G = −15% légal + interdiction location)
-  // Q39 chauffage, Q40 appoint, Q41 renouvelable, Q42 confort été, Q43 facture
-  const coefEnergieBrut = geoPondere([
-    [getVal(38), 0.40], // DPE — poids dominant
-    [getVal(39), 0.22], // type de chauffage
+  // ── ÉNERGIE & DPE — poids global 18% ────────────────────────────────
+  // DPE : poids 0.45 — loi Climat 2021 (passoire = interdiction location + −15% observé marché)
+  // C'est la seule variable avec un impact légal direct sur la valeur
+  const gEner = geoPond([
+    [getVal(38), 0.45], // DPE — poids dominant (effet légal + coût rénovation)
+    [getVal(39), 0.20], // type de chauffage
+    [getVal(42), 0.15], // confort thermique été
+    [getVal(43), 0.12], // facture annuelle réelle
     [getVal(41), 0.08], // production renouvelable
-    [getVal(42), 0.13], // confort été
-    [getVal(43), 0.17], // facture annuelle réelle
   ]);
   // Plage réelle : −20% (DPE G, fioul, aucune isolation) → +8% (DPE A, PAC, solaire)
-  const coefEnergie = projeter(coefEnergieBrut, 0.80, 1.18, 0.80, 1.08);
+  const coefEner = proj(gEner, 0.80, 1.18, 0.80, 1.08);
 
-  // ── DIMENSION 5 : STANDING & CACHET  (poids global 13%) ────────────
-  // Q49 finitions globales, Q50 luminosité, Q51 hauteur, Q52 rangements,
-  // Q53 cachet architectural, Q54 domotique, Q74 exposition solaire
-  const coefStandBrut = geoPondere([
-    [getVal(49), 0.25], // qualité finitions générales
-    [getVal(50), 0.22], // luminosité (très important pour les acheteurs)
-    [getVal(51), 0.12], // hauteur sous plafond
-    [getVal(52), 0.08], // rangements
-    [getVal(53), 0.15], // cachet / caractère architectural
-    [getVal(54), 0.05], // domotique
-    [getVal(74), 0.13], // exposition solaire
+  // ── STANDING & ATOUTS — poids global 12% ─────────────────────────────
+  // Inclut les atouts commerciaux : piscine, garage, terrain, jardin, terrasse
+  // Chaque atout est déjà calibré dans son val (piscine 1.08-1.12, garage 1.06-1.08)
+  // La géo-moyenne les pondère selon leur importance relative
+  const gStand = geoPond([
+    [getVal(49), 0.16], // qualité finitions générales
+    [getVal(50), 0.14], // luminosité — critère émotionnel fort
+    [getVal(23), 0.12], // piscine (val: 1.00-1.12)
+    [getVal(24), 0.10], // garage / parking (val: 1.00-1.08)
+    [getVal(20), 0.08], // état jardin (val: 0.93-1.12)
+    [getVal(22), 0.07], // terrasse / balcon
+    [getVal(53), 0.08], // cachet architectural
+    [getVal(51), 0.06], // hauteur sous plafond
+    [getVal(73), 0.07], // exposition solaire
+    [getVal(52), 0.06], // rangements
+    [getVal(54), 0.04], // domotique
+    [getVal(71), 0.02], // cave à vin / home cinéma / sauna
   ]);
-  // Plage réelle : −10% (bas de gamme, sombre) → +10% (luxe, lumineux, exceptionnel)
-  const coefStanding = projeter(coefStandBrut, 0.87, 1.18, 0.90, 1.10);
+  // Plage réelle : −10% (aucun atout, sombre) → +15% (piscine + garage + cachet + lumineux)
+  const coefStand = proj(gStand, 0.87, 1.18, 0.90, 1.15);
 
-  // ── DIMENSION 6 : MARCHÉ LOCAL  (poids global 9%) ──────────────────
-  // Q66 tension marché, Q67 dev/déclin, Q68 potentiel locatif, Q70 nuisances futures
-  const coefMarcheBrut = geoPondere([
-    [getVal(66), 0.40], // tension du marché local
-    [getVal(67), 0.25], // dynamique dev/déclin secteur
-    [getVal(68), 0.20], // potentiel locatif
-    [getVal(70), 0.15], // nuisances/projets urbanisme
+  // ── MARCHÉ LOCAL — poids global 6% ───────────────────────────────────
+  const gMarch = geoPond([
+    [getVal(65), 0.40], // tension du marché local
+    [getVal(66), 0.30], // dynamique dev / déclin secteur
+    [getVal(67), 0.15], // potentiel locatif
+    [getVal(69), 0.15], // nuisances / projets urbanisme futurs
   ]);
-  // Plage réelle : −8% (marché déprimé) → +8% (marché très tendu)
-  const coefMarche = projeter(coefMarcheBrut, 0.82, 1.20, 0.92, 1.08);
+  const coefMarch = proj(gMarch, 0.82, 1.20, 0.93, 1.07);
 
-  // ── PRIX FINAL M² — PRODUIT DES COEFS DIMENSIONNELS ────────────────
-  // Ancrage : prix DVF médian de la commune (réalité notariale)
-  // Chaque dimension applique son impact multiplicatif indépendamment
-  // → un DPE F tire le prix vers le bas même si le quartier est excellent
-  const prixDVF_ancrage = prixBand[1]; // toujours le médian DVF comme ancrage neutre
-  const priceLabel = 'Prix personnalisé — modèle multicritères DVF';
+  // ── PRIX FINAL ───────────────────────────────────────────────────────
+  // Ancrage = prix DVF médian de la commune (réalité notariale)
+  // Les 6 coefs s'appliquent en puissance de leur poids global
+  const prixDVF_ancrage = prixBand[1];
+  const priceLabel      = 'Prix personnalisé — modèle multicritères DVF';
 
   const finalPriceM2 = Math.round(
     prixDVF_ancrage
-    * Math.pow(coefLoc,      0.26)
-    * Math.pow(coefEtat,     0.22)
-    * Math.pow(coefFin,      0.13)
-    * Math.pow(coefEnergie,  0.17)
-    * Math.pow(coefStanding, 0.13)
-    * Math.pow(coefMarche,   0.09)
+    * Math.pow(coefLoc,   0.26)
+    * Math.pow(coefEtat,  0.24)
+    * Math.pow(coefFin,   0.14)
+    * Math.pow(coefEner,  0.18)
+    * Math.pow(coefStand, 0.12)
+    * Math.pow(coefMarch, 0.06)
   );
-  const basePriceM2 = finalPriceM2; // compatibilité avec le reste du code
+  const basePriceM2  = finalPriceM2; // compatibilité
+
 
   // Urgence de vente — ajustement stratégique final (hors modèle)
   const urgenceIdx   = answers[76] ?? 2;
@@ -3627,15 +3637,16 @@ function _calculateScores() {
     { label: 'Aucune urgence', delaiCible: '6-12 mois', remise: '+1 à 2%',     conseil: "Avec du temps devant vous, affichez légèrement au-dessus du marché pour avoir de la marge de négociation. Un acheteur coup de cœur paiera le prix fort — attendez-le." },
   ];
   const urgenceData  = urgenceLabels[urgenceIdx] ?? urgenceLabels[2];
-  const totalValue   = Math.round(finalPriceM2 * surface / 1000) * 1000;
+  const totalValue      = Math.round(finalPriceM2 * surface / 1000) * 1000;
   const prixStrategique = Math.round(totalValue * urgenceCoef / 1000) * 1000;
-  const low  = Math.round(totalValue * 0.93 / 1000) * 1000;
-  const high = Math.round(totalValue * 1.07 / 1000) * 1000;
+  const low  = Math.round(totalValue * 0.94 / 1000) * 1000;
+  const high = Math.round(totalValue * 1.06 / 1000) * 1000;
   const plusVal = scores.etat < 45 ? '+15 à 28%' : scores.etat < 65 ? '+6 à 14%' : '+2 à 6%';
   const delai   = scores.global > 78 ? '1-2 mois' : scores.global > 60 ? '2-4 mois' : '4-8 mois';
   lastPrix = {
     totalValue, low, high, finalPriceM2, surface, plusVal, delai,
     prixStrategique, urgenceData, urgenceIdx, typeBien,
+    coefLoc, coefEtat, coefFin, coefEner, coefStand, coefMarch,
     ville: cityInput || 'France',
     typeBienLabel: ['Maison individuelle','Appartement','Maison mitoyenne','Loft / atypique'][typeBienIdx] || 'Bien immobilier',
     chambres: (() => { const q=questions[14]; return q?.options?.[answers[14]]?.label || '—'; })(),

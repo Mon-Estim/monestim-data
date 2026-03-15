@@ -1062,26 +1062,41 @@ async function generatePDF() {
   t('MonEstim : '+fmt(baseM2)+' EUR/m2', 20, 76.5, 8, 'bold', GOLD);
   t(diffVlbl, W-18, 76.5, 6.5, 'normal', diffVcol, 'right');
 
-  // ── INDICATEUR DE CONFIANCE METHODOLOGIQUE ──────────────────
+  // ── MÉTHODE DE VALORISATION ────────────────────────────────
   let liqY = 86;
-  rr(14, liqY, W-28, 20, 1, [22,22,14], [201,168,76,0.2], 0.4);
-  t('Methode de valorisation MonEstim', 20, liqY+7, 8, 'bold', GOLD);
-  const methodeFacteurs = [
-    'Prix DVF de reference : base notariale officielle 2020-2025',
-    'Ajustement etat (+/-12%) : ' + (s.etat >= 65 ? 'Bien en bon etat — bande haute' : s.etat >= 40 ? 'Etat correct — bande mediane' : 'Travaux a prevoir — bande basse'),
-    'Coef. localisation (x'+((0.92+(s.localisation/100)*0.16).toFixed(2))+') : score quartier/transport/services',
-    'Coef. energie (x'+((0.91+(s.energie/100)*0.13).toFixed(2))+') : DPE et performance thermique',
-    'Coef. standing (x'+((0.94+(s.standing/100)*0.12).toFixed(2))+') : finitions et materiaux',
+
+  // Coefs dimensionnels depuis lastPrix
+  const cLocD   = safeNum(p.coefLoc,   1.00);
+  const cEtatD  = safeNum(p.coefEtat,  1.00);
+  const cFinD   = safeNum(p.coefFin,   1.00);
+  const cEnerD  = safeNum(p.coefEner,  1.00);
+  const cStandD = safeNum(p.coefStand, 1.00);
+  const cMarchD = safeNum(p.coefMarch, 1.00);
+
+  rr(14, liqY, W-28, 10, 1, [22,22,14], [201,168,76,0.2], 0.4);
+  box(14, liqY, 2, 10, GOLD, null);
+  t('Methode de valorisation — 6 dimensions (base DVF notariale)', 20, liqY+6.5, 7, 'bold', GOLD);
+  liqY += 12;
+
+  const coefRows = [
+    ['Localisation (26%)',    cLocD],
+    ['Etat structure (24%)',  cEtatD],
+    ['Energie / DPE (18%)',   cEnerD],
+    ['Finitions (14%)',       cFinD],
+    ['Standing / atouts (12%)', cStandD],
+    ['Marche local (6%)',     cMarchD],
   ];
-  const mw = (W-40)/2;  // 2 colonnes méthode, marge bord droite
-  methodeFacteurs.slice(0,4).forEach((f,i) => {
-    const mx = 20 + (i%2)*(mw+4);
-    const my = liqY + 12 + Math.floor(i/2)*6;
-    rr(mx-2, my-3, 2, 2, 1, GOLD, null);
-    t(f, mx+2, my, 5.5, 'normal', TEXT3);
+  const cw = (W-32) / 3;
+  coefRows.forEach(([label, val], i) => {
+    const cx = 16 + (i % 3) * (cw + 2);
+    const cy = liqY + Math.floor(i / 3) * 10;
+    const col = val >= 1.02 ? GREEN : val <= 0.97 ? ORANGE : TEXT2;
+    const sign = val >= 1 ? '+' : '';
+    rr(cx, cy, cw, 8.5, 1, [26,26,16], null);
+    t(label, cx+2, cy+4.5, 4.8, 'normal', TEXT3);
+    t(sign + ((val-1)*100).toFixed(1)+'%', cx+cw-2, cy+5.5, 7, 'bold', col, 'right');
   });
-  t(methodeFacteurs[4], 20+2, liqY+24, 5.5, 'normal', TEXT3);
-  liqY += 26;
+  liqY += 24;
 
   // ── VENTES NOTARIEES REELLES DVF ───────────────────────────
   // Récupérées via API DVF+ data.gouv.fr (code INSEE de la commune)
