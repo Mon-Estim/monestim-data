@@ -455,6 +455,17 @@ async function generatePDF() {
     t('-'+ca.pct+'% soit -'+fmt(decoteC)+' EUR — mais isolation eligible a 1 EUR (MaPrimeRenov\')', 20, yC+10.5, 5.5, 'normal', TEXT2);
   }
 
+  // ── PLUS-VALUE PISCINE ───────────────────────────────────────────────
+  const piscineExtra = safeNum(p.piscineExtra, 0);
+  if (piscineExtra > 0) {
+    const yP = (p.comblesAlert ? yC + 14 : (p.toitureAlert ? 186 : 172));
+    rr(14, yP, W-28, 11, 1, [14,28,22], [50,200,130,0.18], 0.8);
+    box(14, yP, 2, 11, GREEN, null);
+    const _piscLbl = piscineExtra === 10000 ? 'PISCINE CREUSÉE ET CHAUFFÉE' : 'PISCINE HORS SOL / SPA PROFESSIONNEL';
+    t('✦ PLUS-VALUE INCLUSE — ' + _piscLbl, 20, yP+5, 6.5, 'bold', GREEN);
+    t('+'+fmt(piscineExtra)+' EUR integres dans l\'estimation (valeur fixe marche)', 20, yP+10, 5.5, 'normal', TEXT2);
+  }
+
   // 3 KPIs
   const kpis = [
     ['SCORE GLOBAL', safeNum(s.global)+'/100', scoreLbl(safeNum(s.global)), scoreCol(s.global)],
