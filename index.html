@@ -3570,32 +3570,14 @@ let lastScores = null;
 let lastPrix = null;
 
 function showResults() {
-  // ── Toujours calculer les scores en premier ──
-  try {
-    _calculateScores();
-  } catch(e) {
-    console.error('_calculateScores error:', e);
+  // ── Paiement obligatoire avant de voir les résultats ──
+  if (!hasPremium && selectedOffer) {
+    openPayment(selectedOffer === 'premium' ? 'result' : 'basic');
+    return;
   }
-
-  if (!hasPremium) {
-    // Afficher l'écran de félicitations (résumé + CGV + bouton paiement)
-    showScreen('felicitations');
-    // Scroll vers le haut pour que l'upsell soit visible dès l'affichage
-    window.scrollTo(0, 0);
-    document.documentElement.scrollTop = 0;
-    document.body.scrollTop = 0;
-    if (window.notifyHeight) window.notifyHeight();
-    const isBasic = !selectedOffer || selectedOffer === 'basic';
-    if (isBasic) {
-      document.getElementById('upsell-felicitations').style.display = 'block';
-      document.getElementById('cta-felicitations').style.display    = 'none';
-    } else {
-      document.getElementById('upsell-felicitations').style.display = 'none';
-      document.getElementById('cta-felicitations').style.display    = 'block';
-    }
-    // Notifier la hauteur après rendu complet
-    setTimeout(() => { if (window.notifyHeight) window.notifyHeight(); }, 100);
-    setTimeout(() => { if (window.notifyHeight) window.notifyHeight(); }, 400);
+  if (!hasPremium && !selectedOffer) {
+    selectedOffer = 'basic';
+    openPayment('basic');
     return;
   }
   _renderResults();
@@ -4730,17 +4712,7 @@ function proceedToPayment() {
   if (!lastScores || !lastPrix) { _calculateScores(); }
   var payload = buildPayload(selectedOffer || 'basic');
   var url = (selectedOffer === 'premium') ? PAGE_PAIEMENT_PREMIUM : PAGE_PAIEMENT_BASIC;
-  // Vérification : lien Stripe non encore configuré
-  if (!url || url.indexOf('TODO_') === 0) {
-    alert('⚙️  Lien de paiement non encore configuré.');
-    return;
-  }
-  // ── Stocker le payload AVANT la redirection Stripe ──────────────────
-  // La page résultat (tunnel-page3-resultats.html) le lira via localStorage
-  try { localStorage.setItem('monestim_payload', payload); } catch(e) {}
-  try { sessionStorage.setItem('monestim_payload', payload); } catch(e) {}
-  // Rediriger vers Stripe (le payload ?d= est ignoré par Stripe mais on le garde pour debug)
-  window.top.location.href = url;
+  window.top.location.href = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'd=' + encodeURIComponent(payload);
 }
 
 function openPayment(context) { proceedToPayment(); }
@@ -4828,16 +4800,16 @@ function buildPayload(offer) {
 
 function upgradeAndProceed() {
   selectedOffer = 'premium';
-  // hasPremium reste false jusqu'au vrai paiement — on paye d'abord
+  hasPremium = true;
   var payload = buildPayload('premium');
   sessionStorage.setItem('monestim_payload', payload);
-  proceedToPayment();
+  document.getElementById('upsell-felicitations').style.display = 'none';
+  document.getElementById('cta-felicitations').style.display    = 'block';
 }
 
 function skipUpsell() {
-  // L'utilisateur reste sur l'offre Essentielle → paiement immédiat
-  selectedOffer = 'basic';
-  proceedToPayment();
+  document.getElementById('upsell-felicitations').style.display = 'none';
+  document.getElementById('cta-felicitations').style.display    = 'block';
 }
 
 loadData();
