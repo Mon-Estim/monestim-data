@@ -18,13 +18,13 @@ function avgScore(indices) {
 
 function computeScores() {
   // Q0-Q8 : Localisation
-  const scoreLocalisation = avgScore([0,1,2,3,4,5,6,7,8]);
+  const scoreLocalisation = avgScore([0,1,2,3,4,5,6,7]); // Q8=type bien retiré (n'est pas un critère de localisation)
 
   // Q18-Q30 : État & Travaux (indices nouveaux)
-  const scoreEtat = avgScore([24,25,26,27,28,29,30,31,32,33,34,35]);
+  const scoreEtat = avgScore([25,26,27,28,29,30,31,32,33,34,35]); // Q24=parking retiré (standing, pas état)
 
   // Q36-Q42 : Énergie
-  const scoreEnergie = avgScore([36,37,38,39,40,41,42]);
+  const scoreEnergie = avgScore([37,38,39,40,41,42]); // Q36=travaux récents retiré (pas énergie)
 
   // Q43-Q47 : Copropriété (appart) ou Terrain (maison)
   const scoreCopro = avgScore([43,44,45,46,47]);
@@ -636,7 +636,7 @@ async function generatePDF() {
   var typeBien    = a[8];                    // 0=maison/mitoyenne, 1=appart, 3=loft
   var isMaison    = (typeBien === 0 || typeBien === 2 || typeBien === 3);
   var isAppart    = (typeBien === 1);
-  var ancienBien  = a[26] <= 1;             // avant 1980 (Q26=année construction)
+  var ancienBien  = a[25] <= 1;             // avant 1980 (Q25=année construction)
 
   // ── INDEX DÉFINITIFS — 80 questions, audit mars 2025 ──────
   // Q08=type  Q13=surface  Q20=terrain  Q21=jardin  Q22=constructible
@@ -697,7 +697,7 @@ async function generatePDF() {
   var chauffFioul       = a[38] === 3;      // fioul/poêle
   var chauffMauvais     = a[38] >= 2;       // convecteurs ou fioul → levier actif
   var chauffOK          = a[38] <= 1;       // PAC ou gaz condensation → PAS de levier
-  var confortEteNul     = a[42] === 3;      // inconfort estival avéré
+  var confortEteNul     = a[41] === 3;      // inconfort estival avéré
   var factureLourde     = a[42] >= 2;       // > 1500€/an → levier actif
   var factureOK         = a[42] <= 1;       // < 1500€ → PAS de levier
 
@@ -709,7 +709,7 @@ async function generatePDF() {
   var finitionsBasses   = a[48] >= 2;       // standard ou bas coût
   var finitionsOK       = a[48] <= 1;       // haut gamme ou bon standing
   var bienSombre        = a[49] === 3;      // sombre (nord, vis-à-vis)
-  var rangementNul      = a[52] >= 3;       // aucun rangement intégré
+  var rangementNul      = a[51] >= 3;       // aucun rangement intégré (Q51)
 
   // ── Poids de priorité pour tri ──
   var poids = { Critique:0, Excellent:1, 'Tres bon':2, Bon:3 };
