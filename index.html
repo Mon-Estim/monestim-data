@@ -3570,21 +3570,22 @@ let lastScores = null;
 let lastPrix = null;
 
 function showResults() {
-  // ── Afficher l'écran de félicitations (résumé + CGV + bouton paiement) ──
-  // Le paiement effectif intervient au clic sur "Accéder à mon estimation"
+  // ── Toujours calculer les scores en premier ──
+  try {
+    _calculateScores();
+  } catch(e) {
+    console.error('_calculateScores error:', e);
+  }
+
   if (!hasPremium) {
-    // Calculer les scores maintenant pour avoir lastPrix disponible
-    if (!lastScores || !lastPrix) { _calculateScores(); }
+    // Afficher l'écran de félicitations (résumé + CGV + bouton paiement)
     showScreen('felicitations');
     if (window.notifyHeight) window.notifyHeight();
-    // Afficher le bon bloc selon l'offre sélectionnée
     const isBasic = !selectedOffer || selectedOffer === 'basic';
     if (isBasic) {
-      // Offre basique → montrer l'upsell d'abord
       document.getElementById('upsell-felicitations').style.display = 'block';
       document.getElementById('cta-felicitations').style.display    = 'none';
     } else {
-      // Offre premium déjà choisie → aller direct au CTA
       document.getElementById('upsell-felicitations').style.display = 'none';
       document.getElementById('cta-felicitations').style.display    = 'block';
     }
@@ -3600,6 +3601,8 @@ function _calculateScores() {
   const typeBienIdx = answers[8] ?? 0;
   const typeBien = (typeBienIdx === 1) ? 'appart' : 'maison';
   const isMaison = typeBien === 'maison';
+  const _cityEl  = document.getElementById('city-input');
+  const cityInput = (_cityEl && _cityEl.value) ? _cityEl.value : '';
   const prices = getCityPrices(cityInput, typeBien);
   const prixBand = prices[typeBien];
   // ═══════════════════════════════════════════════════════════════════════
