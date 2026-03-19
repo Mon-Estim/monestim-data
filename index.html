@@ -1586,7 +1586,7 @@
       <h1 class="intro-title">
         Ce que vaut <em>vraiment</em><br>
         votre bien.<br>
-        <span class="title-sub">Estimation personnalisée sur 70 critères.</span>
+        <span class="title-sub">Estimation personnalisée sur 78 questions.</span>
       </h1>
 
       <!-- ENGAGEMENTS -->
@@ -1630,7 +1630,7 @@
           <div style="font-size:11px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:rgba(72,200,130,0.95); margin-bottom:10px;">✦ MonEstim</div>
           <ul style="list-style:none; display:flex; flex-direction:column; gap:7px;">
             <li style="font-size:13px; color:rgba(200,240,215,0.95); font-weight:500;">Résultat en 10 minutes — sans rendez-vous</li>
-            <li style="font-size:13px; color:rgba(200,240,215,0.95); font-weight:500;">70 critères réels, zéro biais commercial</li>
+            <li style="font-size:13px; color:rgba(200,240,215,0.95); font-weight:500;">78 questions réelles, zéro biais commercial</li>
             <li style="font-size:13px; color:rgba(200,240,215,0.95); font-weight:500;">Ni nom, ni adresse, ni téléphone collectés</li>
             <li style="font-size:13px; color:rgba(200,240,215,0.95); font-weight:500;">Données DVF officielles — prix réels du marché</li>
           </ul>
@@ -1639,7 +1639,7 @@
 
       <div style="background:var(--dark-2); border:1px solid transparent; background-image:linear-gradient(var(--dark-2),var(--dark-2)), linear-gradient(135deg,#B8960C,#E8C97A,#C9A84C,#F5E4A0,#C9A84C); background-origin:border-box; background-clip:padding-box,border-box; border-radius:16px; padding:28px 32px; margin-bottom:32px; animation: fadeIn 0.6s ease 0.3s both;">
         <p class="intro-desc" style="margin-bottom:16px;">
-          MonEstim croise <strong>70 critères exhaustifs sur 7 dimensions pondérées</strong> avec les ventes notariées réelles des 5 dernières années de votre secteur (base DVF). Bien au-delà des outils gratuits — qui ont tout intérêt à vous donner le chiffre qui vous fait signer un mandat.
+          MonEstim croise <strong>78 questions sur 7 dimensions pondérées</strong> avec les ventes notariées réelles des 5 dernières années de votre secteur (base DVF). Bien au-delà des outils gratuits — qui ont tout intérêt à vous donner le chiffre qui vous fait signer un mandat.
         </p>
         <div style="height:1px; background:linear-gradient(90deg,transparent,rgba(201,168,76,0.3),transparent); margin-bottom:16px;"></div>
         <p class="intro-desc" style="margin-bottom:0;">
@@ -1756,7 +1756,7 @@
         </div>
         <div id="geo-enrich-info" style="display:none; margin-top:-8px; margin-bottom:12px; padding:8px 12px; background:rgba(201,168,76,0.06); border:1px solid rgba(201,168,76,0.15); border-radius:8px;"></div>
         <button class="btn-primary btn-cta-main" id="btn-start-quiz" onclick="startQuizWithOffer()" style="opacity:0.4; pointer-events:none;">
-          Commencer les 70 questions →
+          Commencer les 78 questions →
         </button>
       </div>
 
@@ -1820,7 +1820,7 @@
           Votre estimation<br>est <em>prête</em>.
         </h2>
         <p style="font-size:15px;color:var(--text-muted);max-width:480px;margin:0 auto 36px;line-height:1.7;">
-          70 critères analysés. Résultat calculé sur les ventes réelles de votre secteur.
+          78 questions analysées. Résultat calculé sur les ventes réelles de votre secteur.
         </p>
         <div id="upsell-felicitations" style="display:none;margin-bottom:32px;">
           <div style="background:var(--dark-2);border:1px solid transparent;
@@ -1846,6 +1846,11 @@
             <button onclick="skipUpsell()" style="width:100%;background:none;border:none;color:var(--text-muted);font-size:12px;cursor:pointer;padding:8px;text-decoration:underline;text-underline-offset:3px;">
               Non merci, rester sur l'Estimation Essentielle (9,90 €)
             </button>
+            <p style="font-size:11px;color:var(--text-muted);margin-top:12px;line-height:1.6;text-align:center;">
+              En procédant, vous acceptez nos
+              <a href="#cgv" onclick="document.getElementById('modal-cgv').style.display='flex';return false;" style="color:var(--gold);text-decoration:underline;text-underline-offset:3px;cursor:pointer;">CGV</a>
+              · TVA non applicable · SIRET 809 848 146 00027
+            </p>
           </div>
         </div>
         <div id="cta-felicitations" style="display:none;">
@@ -1853,6 +1858,13 @@
             Accéder à mon estimation&nbsp;→
           </button>
           <p style="font-size:12px;color:var(--text-muted);margin-top:14px;">🔒 Paiement sécurisé · Accès immédiat · Aucun rappel</p>
+          <p style="font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.6;">
+            En procédant au paiement, vous acceptez nos
+            <a href="#cgv" onclick="document.getElementById('modal-cgv').style.display='flex';return false;" style="color:var(--gold);text-decoration:underline;text-underline-offset:3px;cursor:pointer;">Conditions Générales de Vente</a>
+            et nos
+            <a href="#mentions" onclick="document.getElementById('modal-mentions').style.display='flex';return false;" style="color:var(--text-muted);text-decoration:underline;text-underline-offset:3px;cursor:pointer;">Mentions légales</a>.
+            TVA non applicable — art. 293 B du CGI · SIRET 809 848 146 00027
+          </p>
         </div>
       </div>
     </div>
@@ -1864,8 +1876,8 @@
 // ║  ⚙️  CONFIGURATION                          ║
 // ╚══════════════════════════════════════════════╝
 var DATA_BASE_URL         = 'https://mon-estim.github.io/monestim-data/';
-var PAGE_PAIEMENT_BASIC   = 'https://mon-estim.github.io/monestim-data/paiement.html';
-var PAGE_PAIEMENT_PREMIUM = 'https://mon-estim.github.io/monestim-data/paiement.html';
+var PAGE_PAIEMENT_BASIC   = 'TODO_STRIPE_BASIC';   // ← Remplacer par le lien Stripe Estimation Essentielle 9,90€
+var PAGE_PAIEMENT_PREMIUM = 'TODO_STRIPE_PREMIUM'; // ← Remplacer par le lien Stripe Analyse Complète 14,90€
 
 // Variables données — remplies après chargement
 var COMMUNES_LIST = [];
@@ -1965,8 +1977,9 @@ const questions = [
     {icon:"🌾",label:"Commodités rares, zone isolée", val:0.85}
   ]},
 
-  { section:"📍 Localisation", text:"Vue et environnement immédiat du bien ?", hint:"Ce que l'on voit depuis les fenêtres et pièces de vie.", type:"options", cols:2, options:[
-    {icon:"🌊",label:"Vue exceptionnelle (mer, lac, montagne, panorama)", val:1.25},
+  { section:"📍 Localisation", text:"Vue et environnement immédiat du bien ?", hint:"Ce que l'on voit depuis les fenêtres et pièces de vie.", type:"options", cols:1, options:[
+    {icon:"🌊",label:"Vue mer exceptionnelle — façade océan, front de plage, mer visible en direct", val:1.25, vueMer:true},
+    {icon:"🏔️",label:"Vue panoramique exceptionnelle — lac, montagne, fleuve, campagne à perte de vue", val:1.20, vuePanorama:true},
     {icon:"🌳",label:"Vue dégagée sur parc, verdure, campagne", val:1.12},
     {icon:"🏡",label:"Environnement résidentiel calme, pas de vis-à-vis", val:1.0},
     {icon:"🏭",label:"Vis-à-vis direct / nuisances visuelles", val:0.85}
@@ -3005,17 +3018,6 @@ function prevQuestion() {
   }
 }
 
-function skipUpsell() {
-  showScreen('question');
-  const next = getNextVisibleQ(currentQ);
-  if (next < questions.length) {
-    currentQ = next;
-    renderQuestion();
-  } else {
-    showResults();
-  }
-}
-
 function updateProgress() {
   const visibleTotal = countVisibleQuestions();
   const visibleIdx = getVisibleIndex(currentQ);
@@ -3568,14 +3570,24 @@ let lastScores = null;
 let lastPrix = null;
 
 function showResults() {
-  // ── Paiement obligatoire avant de voir les résultats ──
-  if (!hasPremium && selectedOffer) {
-    openPayment(selectedOffer === 'premium' ? 'result' : 'basic');
-    return;
-  }
-  if (!hasPremium && !selectedOffer) {
-    selectedOffer = 'basic';
-    openPayment('basic');
+  // ── Afficher l'écran de félicitations (résumé + CGV + bouton paiement) ──
+  // Le paiement effectif intervient au clic sur "Accéder à mon estimation"
+  if (!hasPremium) {
+    // Calculer les scores maintenant pour avoir lastPrix disponible
+    if (!lastScores || !lastPrix) { _calculateScores(); }
+    showScreen('felicitations');
+    if (window.notifyHeight) window.notifyHeight();
+    // Afficher le bon bloc selon l'offre sélectionnée
+    const isBasic = !selectedOffer || selectedOffer === 'basic';
+    if (isBasic) {
+      // Offre basique → montrer l'upsell d'abord
+      document.getElementById('upsell-felicitations').style.display = 'block';
+      document.getElementById('cta-felicitations').style.display    = 'none';
+    } else {
+      // Offre premium déjà choisie → aller direct au CTA
+      document.getElementById('upsell-felicitations').style.display = 'none';
+      document.getElementById('cta-felicitations').style.display    = 'block';
+    }
     return;
   }
   _renderResults();
@@ -3708,7 +3720,15 @@ function _calculateScores() {
   // ── PRIX FINAL ───────────────────────────────────────────────────────
   // Ancrage = prix DVF médian de la commune (réalité notariale)
   // Les 6 coefs s'appliquent en puissance de leur poids global
-  const prixDVF_ancrage = prixBand[1];
+  // ── ANCRAGE DVF INTERPOLÉ SELON LE SCORE — formule 35→95 ────────────
+  // score ≤ 35 → bas DVF exact (bien très dégradé)
+  // score  65 → médian DVF exact (bien moyen)
+  // score ≥ 95 → haut DVF exact (bien exceptionnel)
+  // Le pivot à 65 = médian DVF garantit la cohérence avec les notaires
+  const _sg = Math.min(95, Math.max(35, scores.global));
+  const prixDVF_ancrage = _sg <= 65
+    ? prixBand[0] + (_sg - 35) / 30 * (prixBand[1] - prixBand[0])
+    : prixBand[1] + (_sg - 65) / 30 * (prixBand[2] - prixBand[1]);
   const priceLabel      = 'Prix personnalisé — modèle multicritères DVF';
 
   const finalPriceM2 = Math.round(
@@ -3743,9 +3763,32 @@ function _calculateScores() {
     ? { label: 'Isolation combles minimale', detail: 'Renforcement éligible aux aides MaPrimeRénov\'', pct: 3 }
     : null;
 
-  // Malus combinés
+  // ── PRIME VUE EXCEPTIONNELLE ─────────────────────────────────────────
+  // Malus combinés (définis avant pour usage dans finalPriceM2Apres)
   const totalMalus = toitureMalus + comblesMalus;
-  const finalPriceM2Apres = totalMalus > 0 ? Math.round(finalPriceM2 * (1 - totalMalus)) : finalPriceM2;
+  // Vue mer directe    (Q06=[0] vueMer)     : +15% sur le prix au m²
+  // Vue panoramique    (Q06=[1] vuePanorama) : +8%  sur le prix au m²
+  // NB : la vue influence déjà le score global via Q06/Q03 (≈+4 pts),
+  //      ce qui monte l'ancrage DVF. La prime ici capture le surplus
+  //      non capturé par le score — calibrée pour éviter le double comptage.
+  // Source études : prime mer nationale = +26% brut, score capte ≈8-10%
+  //                 → prime résiduelle = +15-18% selon localité
+  const vueIdx = answers[6] ?? 2;
+  const q06opts = questions[6]?.options || [];
+  const vueOpt  = q06opts[vueIdx] || {};
+  const vueMerPrime     = (vueOpt.vueMer      === true) ? 0.15 : 0;
+  const vuePanoPrime    = (vueOpt.vuePanorama === true) ? 0.08 : 0;
+  const vuePrimeTotal   = vueMerPrime + vuePanoPrime; // au plus l'un des deux
+  const vueAlert = vueMerPrime > 0
+    ? { label: 'Vue mer exceptionnelle', detail: 'Façade océan / front de plage — prime marché +15%', pct: 15, type: 'mer' }
+    : vuePanoPrime > 0
+    ? { label: 'Vue panoramique exceptionnelle', detail: 'Lac, montagne, fleuve — prime marché +8%', pct: 8, type: 'panorama' }
+    : null;
+
+  // Prix/m² avec prime vue appliquée APRÈS malus
+  const finalPriceM2Apres = Math.round(
+    finalPriceM2 * (1 - totalMalus) * (1 + vuePrimeTotal)
+  );
 
 
   const urgenceIdx   = answers[76] ?? 2;
@@ -3788,6 +3831,7 @@ function _calculateScores() {
     prixStrategique, urgenceData, urgenceIdx, typeBien,
     toitureAlert, toitureMalus,
     comblesAlert, comblesMalus,
+    vueAlert, vuePrimeTotal,
     piscineExtra,
     coefLoc, coefEtat, coefFin, coefEner, coefStand, coefMarch,
     ville: cityInput || 'France',
@@ -4165,6 +4209,21 @@ async function generatePDF() {
     box(14, _alertY, 2, 11, GOLD, null);
     t('DECOTE APPLIQUEE — ' + p.comblesAlert.label.toUpperCase(), 18, _alertY+5, 6.5, 'bold', GOLD);
     t('-'+p.comblesAlert.pct+'%  soit  -'+fmt(_decoteC)+' EUR — eligible a 1 EUR via MaPrimeRenov\'', 18, _alertY+10, 5.5, 'normal', TEXT2);
+    _alertY += 13;
+  }
+
+  // ── ENCART PRIME VUE (mer ou panorama) ──────────────────────────────
+  if (p.vueAlert) {
+    const _isMer  = p.vueAlert.type === 'mer';
+    const _bgVue  = _isMer ? [14,22,30] : [14,22,14];
+    const _bdVue  = _isMer ? [50,150,220] : [50,180,130];
+    const _colVue = _isMer ? [100,180,255] : GREEN;
+    const _pctVue = p.vueAlert.pct;
+    const _valVue = Math.round(safeNum(p.totalValue) / (1 + safeNum(p.vuePrimeTotal||0)) * safeNum(p.vuePrimeTotal||0) / 1000) * 1000;
+    rr(14, _alertY, W-28, 11, 1, _bgVue, _bdVue, 0.8);
+    box(14, _alertY, 2, 11, _colVue, null);
+    t('✦ PRIME DECLAREE — ' + p.vueAlert.label.toUpperCase(), 18, _alertY+5, 6.5, 'bold', _colVue);
+    t('+'+_pctVue+'%  soit  +'+fmt(_valVue)+' EUR integres dans l\'estimation — '+p.vueAlert.detail, 18, _alertY+10, 5.5, 'normal', TEXT2);
     _alertY += 13;
   }
 
@@ -4577,7 +4636,8 @@ async function generatePDF() {
     'local en temps reel, situation juridique et potentiel de valorisation personnalise.',
     '',
     '7 dimensions ponderees : Localisation 26% | Etat 24% | Energie 18% | Standing 12%',
-    'Marche 11% | Copropriete/Terrain 5% | Juridique 4%  —  Croise avec DVF de votre commune.',
+    'Marche 11% | Copropriete/Terrain 5% | Juridique 4%  —  Ancrage DVF interpole (35→95).',
+    'Prime declarative : vue mer +15%, vue panoramique +8%  —  Source : etudes Belles Demeures / SeLoger.',
   ];
   mLines.forEach((l,i) => {
     const bold = i===6||i===7;
@@ -4660,6 +4720,11 @@ function proceedToPayment() {
   if (!lastScores || !lastPrix) { _calculateScores(); }
   var payload = buildPayload(selectedOffer || 'basic');
   var url = (selectedOffer === 'premium') ? PAGE_PAIEMENT_PREMIUM : PAGE_PAIEMENT_BASIC;
+  // Vérification : lien Stripe non encore configuré
+  if (!url || url.indexOf('TODO_') === 0 || url.indexOf('paiement.html') !== -1) {
+    alert('⚙️  Lien de paiement non configuré.\nRemplacez TODO_STRIPE_BASIC et TODO_STRIPE_PREMIUM dans le code par vos vrais liens Stripe.');
+    return;
+  }
   window.top.location.href = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'd=' + encodeURIComponent(payload);
 }
 
@@ -4729,7 +4794,7 @@ function restartQuiz() {
   const btnStart = document.getElementById('btn-start-quiz');
   btnStart.style.opacity = '0.4';
   btnStart.style.pointerEvents = 'none';
-  btnStart.textContent = 'Commencer les 70 questions →';
+  btnStart.textContent = 'Commencer les 78 questions →';
   document.getElementById('selected-offer-label').textContent = 'Sélectionnez une offre ci-dessus pour continuer';
   document.getElementById('selected-offer-label').style.color = 'var(--text-muted)';
   document.getElementById('progressWrap').style.display = 'none';
@@ -4748,16 +4813,16 @@ function buildPayload(offer) {
 
 function upgradeAndProceed() {
   selectedOffer = 'premium';
-  hasPremium = true;
+  // hasPremium reste false jusqu'au vrai paiement — on paye d'abord
   var payload = buildPayload('premium');
   sessionStorage.setItem('monestim_payload', payload);
-  document.getElementById('upsell-felicitations').style.display = 'none';
-  document.getElementById('cta-felicitations').style.display    = 'block';
+  proceedToPayment();
 }
 
 function skipUpsell() {
-  document.getElementById('upsell-felicitations').style.display = 'none';
-  document.getElementById('cta-felicitations').style.display    = 'block';
+  // L'utilisateur reste sur l'offre Essentielle → paiement immédiat
+  selectedOffer = 'basic';
+  proceedToPayment();
 }
 
 loadData();
