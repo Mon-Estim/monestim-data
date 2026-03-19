@@ -3580,6 +3580,10 @@ function showResults() {
   if (!hasPremium) {
     // Afficher l'écran de félicitations (résumé + CGV + bouton paiement)
     showScreen('felicitations');
+    // Scroll vers le haut pour que l'upsell soit visible dès l'affichage
+    window.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
     if (window.notifyHeight) window.notifyHeight();
     const isBasic = !selectedOffer || selectedOffer === 'basic';
     if (isBasic) {
@@ -3589,6 +3593,9 @@ function showResults() {
       document.getElementById('upsell-felicitations').style.display = 'none';
       document.getElementById('cta-felicitations').style.display    = 'block';
     }
+    // Notifier la hauteur après rendu complet
+    setTimeout(() => { if (window.notifyHeight) window.notifyHeight(); }, 100);
+    setTimeout(() => { if (window.notifyHeight) window.notifyHeight(); }, 400);
     return;
   }
   _renderResults();
@@ -4724,11 +4731,16 @@ function proceedToPayment() {
   var payload = buildPayload(selectedOffer || 'basic');
   var url = (selectedOffer === 'premium') ? PAGE_PAIEMENT_PREMIUM : PAGE_PAIEMENT_BASIC;
   // Vérification : lien Stripe non encore configuré
-  if (!url || url.indexOf('TODO_') === 0 || url.indexOf('paiement.html') !== -1) {
-    alert('⚙️  Lien de paiement non configuré.\nRemplacez TODO_STRIPE_BASIC et TODO_STRIPE_PREMIUM dans le code par vos vrais liens Stripe.');
+  if (!url || url.indexOf('TODO_') === 0) {
+    alert('⚙️  Lien de paiement non encore configuré.');
     return;
   }
-  window.top.location.href = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'd=' + encodeURIComponent(payload);
+  // ── Stocker le payload AVANT la redirection Stripe ──────────────────
+  // La page résultat (tunnel-page3-resultats.html) le lira via localStorage
+  try { localStorage.setItem('monestim_payload', payload); } catch(e) {}
+  try { sessionStorage.setItem('monestim_payload', payload); } catch(e) {}
+  // Rediriger vers Stripe (le payload ?d= est ignoré par Stripe mais on le garde pour debug)
+  window.top.location.href = url;
 }
 
 function openPayment(context) { proceedToPayment(); }
