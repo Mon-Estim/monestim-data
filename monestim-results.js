@@ -722,7 +722,7 @@ async function generatePDF() {
 
   // ── Copropriété (appartement) ─────────────────────────────
   var immeubleDegrade   = a[43] >= 2;       // état moyen ou dégradé
-  var travauxCopro      = a[46] >= 2;       // travaux importants votés
+  var travauxCopro      = a[45] >= 2;       // travaux importants votés
 
   // ── Standing & finitions ──────────────────────────────────
   var finitionsBasses   = a[48] >= 2;       // standard ou bas coût
