@@ -434,39 +434,58 @@ async function generatePDF() {
   t('Fourchette haute : '+fmt(p.high)+' EUR',W/2,167,7.5,'normal',TEXT3,'center');
 
   // ── ENCART DÉCOTE TOITURE (affiché uniquement si toitureMauvaise) ───
+  // ── ENCARTS DYNAMIQUES — _alertY s'incrémente à chaque encart affiché ──
+  let _alertY = 172;
+
+  // TOITURE
   if (p.toitureAlert) {
     const ta = p.toitureAlert;
     const decoteMontant = Math.round(safeNum(p.totalValue) / (1 - safeNum(p.toitureMalus,0)) * safeNum(p.toitureMalus,0) / 1000) * 1000;
-    rr(14, 172, W-28, 12, 1, [40,20,14], [220,80,50,0.25], 0.8);
-    box(14, 172, 2, 12, ORANGE, null);
-    t('⚠ DECOTE APPLIQUEE — ' + ta.label.toUpperCase(), 20, 177, 6.5, 'bold', ORANGE);
-    t('-10% soit -'+fmt(decoteMontant)+' EUR integres dans l\'estimation', 20, 182.5, 5.5, 'normal', TEXT2);
-    t('Refaire la toiture peut recuperer cette decote complete', W-16, 182.5, 5.5, 'normal', TEXT3, 'right');
+    rr(14, _alertY, W-28, 12, 1, [40,20,14], [220,80,50,0.25], 0.8);
+    box(14, _alertY, 2, 12, ORANGE, null);
+    t('⚠ DECOTE APPLIQUEE — ' + ta.label.toUpperCase(), 20, _alertY+5, 6.5, 'bold', ORANGE);
+    t('-10% soit -'+fmt(decoteMontant)+' EUR integres dans l\'estimation', 20, _alertY+10.5, 5.5, 'normal', TEXT2);
+    _alertY += 14;
   }
 
-  // ── ENCART DÉCOTE COMBLES ────────────────────────────────────────────
+  // COMBLES
   if (p.comblesAlert) {
     const ca = p.comblesAlert;
-    const yC = p.toitureAlert ? 187 : 172;
     const decoteC = Math.round(safeNum(p.totalValue) / (1 - safeNum(p.comblesMalus,0)) * safeNum(p.comblesMalus,0) / 1000) * 1000;
-    rr(14, yC, W-28, 12, 1, [30,28,14], [220,160,50,0.2], 0.8);
-    box(14, yC, 2, 12, GOLD, null);
-    t('⚠ DECOTE APPLIQUEE — ' + ca.label.toUpperCase(), 20, yC+5, 6.5, 'bold', GOLD);
-    t('-'+ca.pct+'% soit -'+fmt(decoteC)+' EUR — mais isolation eligible a 1 EUR (MaPrimeRenov\')', 20, yC+10.5, 5.5, 'normal', TEXT2);
+    rr(14, _alertY, W-28, 12, 1, [30,28,14], [220,160,50,0.2], 0.8);
+    box(14, _alertY, 2, 12, GOLD, null);
+    t('⚠ DECOTE APPLIQUEE — ' + ca.label.toUpperCase(), 20, _alertY+5, 6.5, 'bold', GOLD);
+    t('-'+ca.pct+'% soit -'+fmt(decoteC)+' EUR — isolation eligible a 1 EUR (MaPrimeRenov\')', 20, _alertY+10.5, 5.5, 'normal', TEXT2);
+    _alertY += 14;
   }
 
-  // ── PLUS-VALUE PISCINE ───────────────────────────────────────────────
+  // VUE MER / PANORAMA
+  if (p.vueAlert) {
+    const isMer = p.vueAlert.type === 'mer';
+    const bgVue  = isMer ? [14,22,30] : [14,22,14];
+    const bdVue  = isMer ? [50,150,220] : [50,180,130];
+    const colVue = isMer ? [100,180,255] : GREEN;
+    const valVue = Math.round(safeNum(p.totalValue) / (1 + safeNum(p.vuePrimeTotal||0)) * safeNum(p.vuePrimeTotal||0) / 1000) * 1000;
+    rr(14, _alertY, W-28, 12, 1, bgVue, bdVue, 0.8);
+    box(14, _alertY, 2, 12, colVue, null);
+    t('✦ PRIME DECLAREE — ' + p.vueAlert.label.toUpperCase(), 20, _alertY+5, 6.5, 'bold', colVue);
+    t('+'+p.vueAlert.pct+'% soit +'+fmt(valVue)+' EUR integres — '+p.vueAlert.detail, 20, _alertY+10.5, 5.5, 'normal', TEXT2);
+    _alertY += 14;
+  }
+
+  // PISCINE
   const piscineExtra = safeNum(p.piscineExtra, 0);
   if (piscineExtra > 0) {
-    const yP = (p.comblesAlert ? yC + 14 : (p.toitureAlert ? 186 : 172));
-    rr(14, yP, W-28, 11, 1, [14,28,22], [50,200,130,0.18], 0.8);
-    box(14, yP, 2, 11, GREEN, null);
-    const _piscLbl = piscineExtra === 10000 ? 'PISCINE CREUSÉE ET CHAUFFÉE' : 'PISCINE HORS SOL / SPA PROFESSIONNEL';
-    t('✦ PLUS-VALUE INCLUSE — ' + _piscLbl, 20, yP+5, 6.5, 'bold', GREEN);
-    t('+'+fmt(piscineExtra)+' EUR integres dans l\'estimation (valeur fixe marche)', 20, yP+10, 5.5, 'normal', TEXT2);
+    rr(14, _alertY, W-28, 12, 1, [14,28,22], [50,200,130,0.18], 0.8);
+    box(14, _alertY, 2, 12, GREEN, null);
+    const _piscLbl = piscineExtra === 10000 ? 'PISCINE CREUSEE ET CHAUFFEE' : 'PISCINE HORS SOL / SPA PROFESSIONNEL';
+    t('✦ PLUS-VALUE INCLUSE — ' + _piscLbl, 20, _alertY+5, 6.5, 'bold', GREEN);
+    t('+'+fmt(piscineExtra)+' EUR integres dans l\'estimation (valeur fixe marche)', 20, _alertY+10.5, 5.5, 'normal', TEXT2);
+    _alertY += 14;
   }
 
-  // 3 KPIs
+  // 3 KPIs — positionnés après les encarts (_alertY dynamique)
+  const _kpiY = _alertY + 4;
   const kpis = [
     ['SCORE GLOBAL', safeNum(s.global)+'/100', scoreLbl(safeNum(s.global)), scoreCol(s.global)],
     ['PLUS-VALUE', p.plusVal||'—', 'Si travaux realises', GREEN],
@@ -475,12 +494,12 @@ async function generatePDF() {
   const kw = (W-28-8)/3;
   kpis.forEach(([lbl,val,sub,col],i) => {
     const kx = 14 + i*(kw+4);
-    rr(kx,183,kw,26,2,BG3,null);
+    rr(kx,_kpiY,kw,26,2,BG3,null);
     // Barre de couleur top
-    rr(kx,183,kw,2,1,col,null);
-    t(lbl,kx+kw/2,191,5.5,'bold',TEXT3,'center');
-    t(val,kx+kw/2,199,10,'bold',col,'center');
-    t(sub,kx+kw/2,205,6,'normal',TEXT3,'center');
+    rr(kx,_kpiY,kw,2,1,col,null);
+    t(lbl,kx+kw/2,_kpiY+8,5.5,'bold',TEXT3,'center');
+    t(val,kx+kw/2,_kpiY+16,10,'bold',col,'center');
+    t(sub,kx+kw/2,_kpiY+22,6,'normal',TEXT3,'center');
   });
 
   // Score circulaire

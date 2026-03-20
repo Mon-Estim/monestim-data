@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>MonEstim — Estimez votre bien</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
@@ -19,10 +19,12 @@
   html {
     background: #0D0D0D !important;
     height: auto;
+    min-height: 100vh;
   }
   body {
     background: #0D0D0D !important;
     height: auto;
+    min-height: 100vh;
   }
   :root {
     --gold: #C9A84C;
@@ -30,6 +32,7 @@
     --dark: #0D0D0D;
     --dark-2: #1A1A1A;
     --dark-3: #252525;
+    --bg-card: #1A1A1A;
     --text: #F0EDE8;
     --text-muted: #8A8580;
     --border: rgba(201,168,76,0.2);
@@ -59,7 +62,7 @@
     z-index: 0;
   }
 
-  .app { position: relative; z-index: 1; height: auto; background: var(--dark); width: 100%; box-sizing: border-box; overflow-x: hidden; padding-bottom: 24px; }
+  .app { position: relative; z-index: 1; height: auto; min-height: 100vh; background: var(--dark); width: 100%; box-sizing: border-box; overflow-x: hidden; padding-bottom: 24px; }
 
   header {
     display: flex;
@@ -468,6 +471,8 @@
     transition: border-color 0.2s, transform 0.15s;
     position: relative;
     user-select: none;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
   }
 
   .pricing-card:hover { border-color: rgba(201,168,76,0.4); transform: translateY(-2px); }
@@ -588,9 +593,7 @@
   .guarantee-item strong { color: var(--text); }
   .guarantee-item span { color: var(--text-muted); }
 
-  @media (max-width: 560px) {
-    .pricing-block { grid-template-columns: 1fr; }
-  }
+  /* pricing-block 1 col sur mobile — géré par les breakpoints responsive ci-dessous */
 
   .section-card {
     background: var(--dark-2);
@@ -1395,103 +1398,178 @@
     letter-spacing: 0.08em;
   }
 
-  @media (max-width: 600px) {
+  /* ════════════════════════════════════════════════════════════════════
+     RESPONSIVE — Architecture mobile-first complète
+     Breakpoints :
+       xs  : < 480px    → iPhone SE, Android compact
+       sm  : 480-639px  → iPhone standard, grands Android
+       md  : 640-767px  → iPhone Pro Max
+       lg  : 768-1023px → iPad, iPad Mini, tablettes Android
+       xl  : 1024-1279px → iPad Pro, petits laptops
+     Safe area : notch iPhone / Dynamic Island
+  ════════════════════════════════════════════════════════════════════ */
+
+  /* ── Touch global : supprimer délai 300ms sur tous éléments cliquables ── */
+  a, button, .option-btn, .pricing-card, .pricing-select-btn, [onclick] {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    cursor: pointer;
+  }
+
+  /* ── iOS : empêcher le zoom auto sur focus input (font-size < 16px) ── */
+  input, textarea, select {
+    font-size: 16px !important;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  /* ── Bouton suivant : touch de base ── */
+  #btn-next { touch-action: manipulation; cursor: pointer; }
+
+  /* ══════════════════════════════════════════════════════
+     XS — iPhone SE, petits Android  (< 480px)
+  ══════════════════════════════════════════════════════ */
+  @media (max-width: 479px) {
+    header { padding: 12px 16px; }
+    .logo { font-size: 17px; }
+    .header-badge { font-size: 9px; padding: 3px 8px; }
+    .progress-bar-wrap { padding: 9px 16px; }
+    main { padding: 24px 14px 80px; }
+    .intro-title { font-size: 28px; line-height: 1.2; }
+    .intro-title .title-sub { font-size: 18px; }
+    .intro-desc { font-size: 13px; }
+    .anti-badge { font-size: 10px; padding: 4px 10px; }
     .methode-grid { grid-template-columns: repeat(2, 1fr); }
-    header { padding: 16px 20px; }
-    .progress-bar-wrap { padding: 12px 20px; }
-    main { padding: 40px 16px; }
-    .intro-features { grid-template-columns: 1fr; }
-    .vs-block { grid-template-columns: 1fr; }
-    .options-grid.cols-3 { grid-template-columns: 1fr 1fr; }
+    .brutal-compare { grid-template-columns: 1fr; gap: 8px; }
+    .brutal-col { padding: 14px 16px; }
+    .stat-choc-number { font-size: 38px; }
+    .pricing-block { grid-template-columns: 1fr; gap: 12px; }
+    .pricing-card { padding: 18px 16px; }
+    .pricing-price { font-size: 34px; }
+    .pricing-features { font-size: 13px; }
+    .btn-cta-main { font-size: 14px; padding: 15px 20px; width: 100%; }
+    .question-text { font-size: 17px !important; line-height: 1.4; }
+    .options-grid { grid-template-columns: 1fr; gap: 8px; }
+    .options-grid.cols-2 { grid-template-columns: 1fr; }
+    .options-grid.cols-3 { grid-template-columns: 1fr; }
+    .option-btn { padding: 13px 16px; font-size: 13px; }
+    .section-card { padding: 16px 14px; }
+    .section-card-title { font-size: 13px; }
+    #btn-next {
+      position: static !important;
+      width: 100% !important;
+      margin-top: 14px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+    }
+    .result-value { font-size: 34px !important; }
     .result-grid { grid-template-columns: 1fr; }
+    .vs-block { grid-template-columns: 1fr; }
     .form-row { grid-template-columns: 1fr; }
     .cta-block { flex-direction: column; align-items: stretch; }
-    .btn-cta-main { text-align: center; justify-content: center; }
+    .score-bars { gap: 8px; }
+    .modal-box { padding: 24px 18px; margin: 12px; }
+    .modal-title { font-size: 18px; }
+    .cta-reassurance { font-size: 10px; }
+    footer { padding: 20px 14px; }
   }
 
-  /* Score color */
-  .score-excellent .score-bar-fill { background: linear-gradient(90deg, #4CAF50, #81C784); }
-  .score-good .score-bar-fill { background: linear-gradient(90deg, var(--gold), var(--gold-light)); }
-  .score-avg .score-bar-fill { background: linear-gradient(90deg, #FF9800, #FFB74D); }
-
-  @media (max-width: 480px) {
-    .brutal-compare { grid-template-columns: 1fr; }
-    .stat-choc-number { font-size: 42px; }
-    /* Header */
-    header { padding: 14px 16px; }
+  /* ══════════════════════════════════════════════════════
+     SM — iPhone standard, Android  (480px – 639px)
+  ══════════════════════════════════════════════════════ */
+  @media (min-width: 480px) and (max-width: 639px) {
+    header { padding: 14px 20px; }
     .logo { font-size: 18px; }
-    .header-badge { font-size: 10px; padding: 4px 10px; }
-    .progress-bar-wrap { padding: 10px 16px; }
-
-    /* Main */
-    main { padding: 28px 14px 60px; }
-
-    /* Intro */
+    .progress-bar-wrap { padding: 10px 20px; }
+    main { padding: 32px 20px 80px; }
     .intro-title { font-size: 32px; }
     .intro-title .title-sub { font-size: 20px; }
-    .intro-desc { font-size: 14px; }
-    .anti-badge { font-size: 11px; padding: 5px 10px; }
-
-    /* Comparatif brutal — 1 colonne sur mobile */
-    .brutal-compare { grid-template-columns: 1fr !important; gap: 10px; }
-    .brutal-col { padding: 16px 18px; }
-
-    /* Pricing — 1 colonne */
-    .pricing-block { grid-template-columns: 1fr !important; }
+    .methode-grid { grid-template-columns: repeat(2, 1fr); }
+    .brutal-compare { grid-template-columns: 1fr; gap: 10px; }
+    .pricing-block { grid-template-columns: 1fr; gap: 12px; }
     .pricing-card { padding: 20px 18px; }
-    .pricing-price { font-size: 36px; }
-
-    /* Questions */
+    .btn-cta-main { width: 100%; }
     .question-text { font-size: 18px !important; }
-    .options-grid { grid-template-columns: 1fr !important; gap: 8px; }
-    .options-grid.cols-2 { grid-template-columns: 1fr !important; }
-    .options-grid.cols-3 { grid-template-columns: 1fr !important; }
-    .option-btn { padding: 14px 16px; font-size: 13px; touch-action: manipulation; }
-
-    /* Bouton suivant — static dans iframe (fixed ne fonctionne pas dans iframe iOS) */
+    .options-grid { grid-template-columns: 1fr; gap: 8px; }
+    .options-grid.cols-2 { grid-template-columns: 1fr 1fr; }
+    .options-grid.cols-3 { grid-template-columns: 1fr 1fr; }
+    .option-btn { padding: 14px 16px; font-size: 13px; }
     #btn-next {
       position: static !important;
       width: 100% !important;
       margin-top: 16px;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
-      touch-action: manipulation;
-      cursor: pointer;
     }
-
-    /* Section card */
-    .section-card { padding: 18px 16px; }
-    .section-card-title { font-size: 14px; }
-
-    /* Résultats */
-    .result-value { font-size: 36px !important; }
-    .result-grid { grid-template-columns: 1fr !important; }
-    .score-bars { gap: 10px; }
-
-    /* Modal paiement */
-    .modal-box { padding: 28px 20px; margin: 16px; }
-    .modal-title { font-size: 20px; }
-
-    /* Footer */
-    footer { padding: 20px 16px; }
-
-    /* Tagline */
-    .cta-reassurance { font-size: 11px; }
+    .result-grid { grid-template-columns: 1fr; }
+    .vs-block { grid-template-columns: 1fr; }
+    .form-row { grid-template-columns: 1fr; }
+    .cta-block { flex-direction: column; align-items: stretch; }
+    .modal-box { padding: 28px 22px; margin: 16px; }
   }
 
-  /* Tablette */
-  @media (min-width: 481px) and (max-width: 768px) {
-    main { padding: 40px 20px; }
-    .brutal-compare { grid-template-columns: 1fr !important; gap: 10px; }
-    .options-grid.cols-2 { grid-template-columns: 1fr 1fr !important; }
-    .options-grid.cols-3 { grid-template-columns: 1fr 1fr !important; }
-    .pricing-block { grid-template-columns: 1fr !important; }
-    .result-grid { grid-template-columns: 1fr 1fr; }
+  /* ══════════════════════════════════════════════════════
+     MD — iPhone Pro Max, grands Android  (640px – 767px)
+  ══════════════════════════════════════════════════════ */
+  @media (min-width: 640px) and (max-width: 767px) {
+    main { padding: 36px 24px 60px; }
+    .pricing-block { grid-template-columns: 1fr 1fr; gap: 14px; }
+    .pricing-card { padding: 20px 18px; }
+    .options-grid.cols-3 { grid-template-columns: 1fr 1fr; }
     #btn-next {
       position: static !important;
       width: 100% !important;
       margin-top: 16px;
-      touch-action: manipulation;
-      cursor: pointer;
+    }
+    .result-grid { grid-template-columns: 1fr 1fr; }
+    .vs-block { grid-template-columns: 1fr; }
+  }
+
+  /* ══════════════════════════════════════════════════════
+     LG — iPad, iPad Mini, tablettes  (768px – 1023px)
+     FIX : bouton grisé iPad — hover CSS inactif sur touch
+  ══════════════════════════════════════════════════════ */
+  @media (min-width: 768px) and (max-width: 1023px) {
+    main { padding: 44px 32px 60px; }
+    .pricing-block { grid-template-columns: 1fr 1fr; gap: 16px; }
+    .pricing-card { padding: 22px 20px; }
+    /* iPad : tap sur la carte doit déclencher le select sans hover */
+    .pricing-card { -webkit-tap-highlight-color: transparent; }
+    .pricing-card:active {
+      border-color: rgba(201,168,76,0.6);
+      transform: translateY(-1px);
+    }
+    .options-grid.cols-2 { grid-template-columns: 1fr 1fr; }
+    .options-grid.cols-3 { grid-template-columns: 1fr 1fr; }
+    .option-btn { padding: 15px 18px; }
+    #btn-next {
+      position: static !important;
+      width: 100% !important;
+      margin-top: 18px;
+    }
+    .result-grid { grid-template-columns: 1fr 1fr; }
+    .brutal-compare { grid-template-columns: 1fr 1fr; gap: 12px; }
+    .vs-block { grid-template-columns: 1fr; }
+  }
+
+  /* ══════════════════════════════════════════════════════
+     XL — iPad Pro 11", petits laptops  (1024px – 1279px)
+  ══════════════════════════════════════════════════════ */
+  @media (min-width: 1024px) and (max-width: 1279px) {
+    main { padding: 48px 40px; max-width: 880px; }
+    .pricing-block { grid-template-columns: 1fr 1fr; gap: 20px; }
+  }
+
+  /* ══════════════════════════════════════════════════════
+     Safe area — iPhone notch / Dynamic Island / Android
+  ══════════════════════════════════════════════════════ */
+  @supports (padding: max(0px)) {
+    header {
+      padding-left: max(20px, env(safe-area-inset-left));
+      padding-right: max(20px, env(safe-area-inset-right));
+    }
+    main {
+      padding-left: max(16px, env(safe-area-inset-left));
+      padding-right: max(16px, env(safe-area-inset-right));
+    }
+    footer {
+      padding-bottom: max(24px, env(safe-area-inset-bottom));
     }
   }
 
@@ -3625,21 +3703,21 @@ function _calculateScores() {
     return pMin + Math.max(0, Math.min(1, (c - vMin) / (vMax - vMin))) * (pMax - pMin);
   }
 
-  // ── LOCALISATION — poids global 26% ──────────────────────────────────
-  // Drivers : région, type commune, quartier (poids forts)
-  // Accessoires : transports, commerces, vue, risques
+  // ── LOCALISATION INTRA-VILLE — poids global 26% ──────────────────────
+  // NB : Q0 (région), Q1 (type commune), Q2 (distance) sont EXCLUS du calcul de prix
+  // car le prix DVF de la ville les encode déjà. Les inclure créerait un double comptage.
+  // Seules les variables de MICRO-LOCALISATION (intra-ville) influencent le prix ici.
+  // Q0/Q1/Q2 restent dans le scoreLocalisation (barres PDF) — pas dans le prix.
   const gLoc = geoPond([
-    [getVal(0),  0.28], // région — effet le plus structurant
-    [getVal(1),  0.18], // type commune (métropole vs rural)
-    [getVal(3),  0.22], // réputation quartier
-    [getVal(2),  0.12], // distance grande ville
-    [getVal(6),  0.08], // vue / environnement
-    [getVal(4),  0.06], // transports
-    [getVal(5),  0.04], // commerces
-    [getVal(7),  0.02], // risques naturels
+    [getVal(3),  0.524], // réputation quartier — driver principal intra-ville
+    [getVal(6),  0.190], // vue / environnement immédiat
+    [getVal(4),  0.143], // transports en commun / accessibilité
+    [getVal(5),  0.095], // commerces / services de proximité
+    [getVal(7),  0.048], // risques naturels (inondation, glissement…)
   ]);
-  // Plage réelle : −25% (rural isolé / zone risque) → +25% (Paris / côte / quartier premium)
-  const coefLoc = proj(gLoc, 0.80, 1.80, 0.75, 1.25);
+  // Plage réelle intra-ville : −12% (quartier sensible / risques) → +12% (quartier premium)
+  // Plus serrée qu'avant car Q0/Q1/Q2 (amplitude macro) sont retirées
+  const coefLoc = proj(gLoc, 0.85, 1.25, 0.88, 1.12);
 
   // ── ÉTAT GÉNÉRAL — poids global 24% ──────────────────────────────────
   // Q26 état global = vision acheteur, amplitude la plus large (0.60-1.20)
@@ -4825,6 +4903,10 @@ loadData();
     var rect = app.getBoundingClientRect();
     var h = Math.round(rect.height) + 32;
     if (h < 200) h = app.offsetHeight + 32;
+    // Toujours envoyer au minimum la hauteur du viewport
+    // → empêche le fond blanc Systeme.io de s'afficher sous le contenu court
+    var minH = window.innerHeight || document.documentElement.clientHeight || 600;
+    if (h < minH) h = minH;
     window.parent.postMessage({ type: 'monestim-height', height: h }, '*');
   }
 
@@ -4837,6 +4919,28 @@ loadData();
 
   window.addEventListener('load', window.notifyHeight);
   window.addEventListener('resize', window.notifyHeight);
+
+  // ── FIX iPad / iOS : touch sur pricing cards ──────────────────────────
+  // Sur iPadOS, les div avec onclick ne reçoivent pas toujours le click
+  // au premier tap. On ajoute un touchend listener explicite.
+  (function patchPricingCardsTouch() {
+    function attachTouch(el, offer) {
+      el.addEventListener('touchend', function(e) {
+        e.preventDefault(); // empêche le ghost click 300ms
+        selectOffer(offer);
+      }, { passive: false });
+    }
+    var cardBasic   = document.getElementById('card-basic');
+    var cardPremium = document.getElementById('card-premium');
+    if (cardBasic)   attachTouch(cardBasic,   'basic');
+    if (cardPremium) attachTouch(cardPremium, 'premium');
+
+    // Même fix sur les boutons internes (pricing-select-btn)
+    var btnBasic   = document.getElementById('btn-basic');
+    var btnPremium = document.getElementById('btn-premium');
+    if (btnBasic)   attachTouch(btnBasic,   'basic');
+    if (btnPremium) attachTouch(btnPremium, 'premium');
+  })();
 
   // ResizeObserver — plus fiable que MutationObserver sur iOS
   if (window.ResizeObserver) {
