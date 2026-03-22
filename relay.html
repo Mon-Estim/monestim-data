@@ -6,13 +6,18 @@
 <title>Redirection…</title>
 <style>
   body{margin:0;display:flex;align-items:center;justify-content:center;min-height:100vh;
-       font-family:'DM Sans',sans-serif;background:#0a0a0a;color:#fff;text-align:center;padding:20px;}
-  .spinner{width:32px;height:32px;border:3px solid rgba(255,255,255,0.2);
-           border-top-color:#c9a96e;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 16px;}
+       font-family:'DM Sans',sans-serif;background:#0a0a0a;color:#fff;text-align:center;padding:20px;box-sizing:border-box;}
+  .spinner{width:36px;height:36px;border:3px solid rgba(255,255,255,0.15);
+           border-top-color:#c9a96e;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 20px;}
   @keyframes spin{to{transform:rotate(360deg);}}
-  p{font-size:14px;color:rgba(255,255,255,0.5);margin:0;}
-  .error{display:none;}
-  .error p{color:rgba(255,255,255,0.7);font-size:15px;line-height:1.7;margin-bottom:8px;}
+  #loading p{color:rgba(255,255,255,0.4);font-size:14px;margin:0;}
+  #error{display:none;max-width:440px;}
+  #error .icon{font-size:40px;margin-bottom:16px;}
+  #error h2{font-size:22px;font-weight:700;margin:0 0 10px;color:#c9a96e;}
+  #error p{color:rgba(255,255,255,0.6);font-size:14px;line-height:1.7;margin:0 0 10px;}
+  #error strong{color:#fff;}
+  #error .contact{font-size:12px;color:rgba(255,255,255,0.3);margin-top:16px;}
+  #error .contact a{color:rgba(255,255,255,0.4);text-decoration:underline;}
   .btn{display:inline-block;background:#c9a96e;color:#000;padding:14px 32px;border-radius:10px;
        text-decoration:none;font-weight:700;font-size:15px;margin-top:20px;}
 </style>
@@ -23,12 +28,16 @@
     <div class="spinner"></div>
     <p>Récupération de votre estimation…</p>
   </div>
-  <div id="error" class="error">
-    <p style="font-size:24px;margin-bottom:12px;">⚠️</p>
-    <p><strong style="color:#fff;">Votre paiement a bien été pris en compte.</strong></p>
-    <p>Votre session a expiré pendant la redirection.<br>
-       Retournez sur MonEstim et relancez votre estimation — elle sera gratuite.</p>
-    <a href="https://www.mon-estim.fr/" class="btn">← Retour à MonEstim</a>
+  <div id="error">
+    <div class="icon">✅</div>
+    <h2>Paiement confirmé !</h2>
+    <p>Votre paiement a bien été enregistré.</p>
+    <p>
+      Votre session a expiré pendant la redirection.<br>
+      <strong>Relancez simplement le questionnaire — votre prochaine estimation sera entièrement gratuite.</strong>
+    </p>
+    <a href="https://www.mon-estim.fr/" class="btn">← Relancer mon estimation</a>
+    <p class="contact">Un problème ? <a href="mailto:contact@mon-estim.fr">contact@mon-estim.fr</a></p>
   </div>
 </div>
 <script>
@@ -38,7 +47,7 @@
   var payload   = params.get('d');
   var offer     = params.get('offer') || 'basic';
 
-  // ── CAS 1 : avant Stripe (questionnaire → relay → Stripe) ──
+  // ── CAS 1 : avant Stripe — paiement.html envoie relay.html?stripe=...&d=PAYLOAD ──
   if (stripeUrl) {
     if (payload) {
       try { localStorage.setItem('monestim_payload', payload); } catch(e) {}
@@ -48,21 +57,19 @@
     return;
   }
 
-  // ── CAS 2 : retour de Stripe ──
-  // Lire le payload stocké avant Stripe
-  // Ordre : localStorage (desktop) → sessionStorage (iOS navigation privée)
+  // ── CAS 2 : retour de Stripe — success_url → relay.html?offer=X ──
+  // Lecture dans l'ordre de fiabilité : localStorage → sessionStorage_stripe → sessionStorage
   var stored = '';
   try { stored = localStorage.getItem('monestim_payload') || ''; } catch(e) {}
-  if (!stored) {
-    try { stored = sessionStorage.getItem('monestim_payload_stripe') || ''; } catch(e) {}
-  }
+  if (!stored) { try { stored = sessionStorage.getItem('monestim_payload_stripe') || ''; } catch(e) {} }
+  if (!stored) { try { stored = sessionStorage.getItem('monestim_payload') || ''; } catch(e) {} }
 
-  // Nettoyer les deux storages
+  // Nettoyage
   try { localStorage.removeItem('monestim_payload'); } catch(e) {}
   try { sessionStorage.removeItem('monestim_payload_stripe'); } catch(e) {}
 
   if (stored) {
-    // Injecter l'offre correcte (basic ou premium selon success_url Stripe configurée)
+    // Injecter l'offre correcte (basic ou premium selon le success_url Stripe configuré)
     try {
       var data = JSON.parse(decodeURIComponent(escape(atob(stored))));
       data.offer = offer;
@@ -70,9 +77,9 @@
     } catch(e) {}
     window.location.href = 'https://mon-estim.github.io/monestim-data/resultats.html?d=' + encodeURIComponent(stored);
   } else {
-    // Payload perdu — afficher message d'erreur clair
+    // Payload introuvable — afficher message clair (iOS privé, storage plein, etc.)
     document.getElementById('loading').style.display = 'none';
-    document.getElementById('error').style.display = 'block';
+    document.getElementById('error').style.display   = 'block';
   }
 })();
 </script>

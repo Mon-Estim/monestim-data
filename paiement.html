@@ -398,7 +398,9 @@ function selectOffer(offer) {
 }
 
 function goToPayment(offer) {
-  var payload = sessionStorage.getItem('monestim_payload') || '';
+  var payload = sessionStorage.getItem('monestim_payload')
+             || localStorage.getItem('monestim_payload') || '';
+
   // Injecte l'offre choisie dans le payload
   if (payload) {
     try {
@@ -407,14 +409,30 @@ function goToPayment(offer) {
       payload = btoa(unescape(encodeURIComponent(JSON.stringify(data))));
     } catch(e) {}
   }
-  var baseUrl = offer === 'premium' ? STRIPE_PREMIUM : STRIPE_BASIC;
-  // Double stockage : localStorage (desktop) + sessionStorage (iOS navigation privée)
-  // Sur iOS Safari en mode privé, localStorage est bloqué mais sessionStorage fonctionne
+
+  var stripeUrl = offer === 'premium' ? STRIPE_PREMIUM : STRIPE_BASIC;
+
+  // ── SOLUTION ROBUSTE MULTI-APPAREILS ──────────────────────────────────
+  // On passe par relay.html AVANT Stripe plutôt que directement vers Stripe.
+  // relay.html stocke le payload en localStorage SUR SON PROPRE DOMAINE
+  // puis redirige vers Stripe. Au retour de Stripe (success_url → relay.html),
+  // le localStorage est relu sur le MÊME domaine github.io → toujours accessible.
+  // → Fonctionne sur iPhone normal, iPad, Android, Desktop, après refresh.
+  //
+  // Stripe success_url à configurer dans Dashboard :
+  //   basic   → https://mon-estim.github.io/monestim-data/relay.html?offer=basic
+  //   premium → https://mon-estim.github.io/monestim-data/relay.html?offer=premium
+
+  var RELAY_URL = 'https://mon-estim.github.io/monestim-data/relay.html';
+  var relayUrl  = RELAY_URL
+    + '?offer=' + offer
+    + '&stripe=' + encodeURIComponent(stripeUrl);
+
   if (payload) {
-    try { localStorage.setItem('monestim_payload', payload); } catch(e) {}
-    try { sessionStorage.setItem('monestim_payload_stripe', payload); } catch(e) {}
+    relayUrl += '&d=' + encodeURIComponent(payload);
   }
-  window.top.location.href = baseUrl;
+
+  window.top.location.href = relayUrl;
 }
 </script>
 
