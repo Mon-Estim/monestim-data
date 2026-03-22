@@ -2622,7 +2622,11 @@ function startQuizWithOffer() {
   // Lancer le questionnaire directement — le paiement interviendra à la fin
   hasPremium = false; // sera activé après paiement
   closePayment();
+  // Réinitialiser TOUTES les réponses pour éviter toute contamination
+  // d'un test précédent (bug où anciennes réponses restaient en mémoire)
   currentQ = 0;
+  answers = new Array(questions.length).fill(null);
+  clearSession();
   document.getElementById('progressWrap').style.display = 'flex';
   showScreen('question');
   renderQuestion();
@@ -4977,7 +4981,7 @@ function restartQuiz() {
   lastSection = null;
   lastScores = null;
   lastPrix = null;
-  // Reset UI offres
+  clearSession(); // effacer toute session sauvegardée
   ['card-basic','card-premium'].forEach(id => document.getElementById(id)?.classList.remove('selected'));
   document.getElementById('btn-basic').textContent   = 'Choisir cette offre';
   document.getElementById('btn-premium').textContent = 'Choisir cette offre';
