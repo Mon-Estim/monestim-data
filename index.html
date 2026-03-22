@@ -2124,28 +2124,28 @@ const questions = [
     {icon:"✨",label:"3 salles de bain ou plus", val:1.10},
   ]},
 
-  { section:"🏠 Type & Structure", text:"La maison est-elle sur un ou plusieurs niveaux ?", hint:"", showIf:"maison", type:"options", cols:2, options:[
+  { section:"🏠 Type & Structure", showIf:'maison', text:"La maison est-elle sur un ou plusieurs niveaux ?", hint:"", showIf:"maison", type:"options", cols:2, options:[
     {icon:"⬜",label:"Plain-pied (tout de plain-pied)", val:1.05},
     {icon:"🏠",label:"R+1 (rez-de-chaussée + 1 étage)", val:1.08},
     {icon:"🏰",label:"R+2 ou plus", val:1.05},
     {icon:"🏚️",label:"Maison avec combles aménagés", val:1.1}
   ]},
 
-  { section:"🏠 Type & Structure", text:"Mitoyenneté de la maison ?", hint:"Chaque mur mitoyen réduit l'indépendance et peut générer des nuisances.", showIf:"maison", type:"options", cols:2, options:[
+  { section:"🏠 Type & Structure", showIf:'maison', text:"Mitoyenneté de la maison ?", hint:"Chaque mur mitoyen réduit l'indépendance et peut générer des nuisances.", showIf:"maison", type:"options", cols:2, options:[
     {icon:"🏡",label:"Maison isolée — aucun mitoyen", val:1.1},
     {icon:"🏘️",label:"Mitoyenne sur 1 côté", val:1.0},
     {icon:"🏚️",label:"Mitoyenne sur 2 côtés (maison de ville)", val:0.92},
     {icon:"🏗️",label:"Mitoyenne sur 3 côtés (cœur d'îlot)", val:0.85}
   ]},
 
-  { section:"🏠 Type & Structure", text:"À quel étage se situe l'appartement ?", hint:"Le rez-de-chaussée décote systématiquement. Le dernier étage prime si ascenseur.", showIf:"appart", type:"options", cols:2, options:[
+  { section:"🏠 Type & Structure", showIf:'appartement', text:"À quel étage se situe l'appartement ?", hint:"Le rez-de-chaussée décote systématiquement. Le dernier étage prime si ascenseur.", showIf:"appart", type:"options", cols:2, options:[
     {icon:"🪜",label:"Rez-de-chaussée", val:0.88},
     {icon:"1️⃣",label:"1er ou 2ème étage", val:1.0},
     {icon:"🏢",label:"3ème à 5ème étage", val:1.06},
     {icon:"☁️",label:"Dernier étage (terrasse / vue)", val:1.12}
   ]},
 
-  { section:"🏠 Type & Structure", text:"Y a-t-il un ascenseur dans la résidence ?", hint:"Sans ascenseur au-delà du 2ème étage, la valeur chute significativement.", showIf:"appart", type:"options", cols:2, options:[
+  { section:"🏠 Type & Structure", showIf:'appartement', text:"Y a-t-il un ascenseur dans la résidence ?", hint:"Sans ascenseur au-delà du 2ème étage, la valeur chute significativement.", showIf:"appart", type:"options", cols:2, options:[
     {icon:"✅",label:"Oui, ascenseur récent et fonctionnel", val:1.08},
     {icon:"😐",label:"Oui, ascenseur ancien mais fonctionnel", val:1.03},
     {icon:"❌",label:"Non, pas d'ascenseur", val:0.92},
@@ -2153,28 +2153,28 @@ const questions = [
   ]},
 
   // ── 🌳 TERRAIN & EXTÉRIEURS (Q18–Q23) ────────────────────
-  { section:"🌳 Terrain & Extérieurs", text:"Surface totale du terrain ?", hint:"Pour les maisons. Le terrain nu constructible est un actif immobilier à part entière.", showIf:"maison", type:"options", cols:2, options:[
+  { section:"🌳 Terrain & Extérieurs", showIf:'maison', text:"Surface totale du terrain ?", hint:"Pour les maisons. Le terrain nu constructible est un actif immobilier à part entière.", showIf:"maison", type:"options", cols:2, options:[
     {icon:"🌱",label:"Moins de 200 m²", val:1.0},
     {icon:"🌿",label:"200 à 500 m²", val:1.08},
     {icon:"🌳",label:"500 à 1000 m²", val:1.15},
     {icon:"🌲",label:"Plus de 1000 m² (grand terrain)", val:1.2}
   ]},
 
-  { section:"🌳 Terrain & Extérieurs", text:"Quel est l'état et la qualité du jardin ?", hint:"Un jardin paysagé avec arbres matures est immédiatement valorisé par les acheteurs.", showIf:"maison", type:"options", cols:2, options:[
+  { section:"🌳 Terrain & Extérieurs", showIf:'maison', text:"Quel est l'état et la qualité du jardin ?", hint:"Un jardin paysagé avec arbres matures est immédiatement valorisé par les acheteurs.", showIf:"maison", type:"options", cols:2, options:[
     {icon:"🌳",label:"Jardin arboré, paysagé, arbres matures", val:1.12},
     {icon:"🌿",label:"Jardin bien entretenu, quelques végétaux", val:1.06},
     {icon:"⬜",label:"Jardin plat, entretenu mais non aménagé", val:1.0},
     {icon:"🌾",label:"Jardin en friche ou à remettre en état", val:0.93}
   ]},
 
-  { section:"🌳 Terrain & Extérieurs", text:"Le terrain est-il constructible (PLU favorable) ?", hint:"Un terrain avec droit à construire vaut bien plus qu'un terrain inconstructible.", showIf:"maison", type:"options", cols:2, options:[
+  { section:"🌳 Terrain & Extérieurs", showIf:'maison', text:"Le terrain est-il constructible (PLU favorable) ?", hint:"Un terrain avec droit à construire vaut bien plus qu'un terrain inconstructible.", showIf:"maison", type:"options", cols:2, options:[
     {icon:"🏗️",label:"Oui, constructibilité confirmée (zone U ou AU)", val:1.15},
     {icon:"✅",label:"Zone résidentielle normale, extension possible", val:1.05},
     {icon:"⚠️",label:"Zone protégée / agricole — contraintes fortes", val:0.93},
     {icon:"🤔",label:"Non vérifié / je ne sais pas", val:1.0}
   ]},
 
-  { section:"🌳 Terrain & Extérieurs", text:"Présence d'une terrasse ou balcon ?", hint:"Pour les appartements, la terrasse est le premier critère de tri des acheteurs.", showIf:"appartement", type:"options", cols:2, options:[
+  { section:"🌳 Terrain & Extérieurs", text:"Présence d'une terrasse ou balcon ?", hint:"Pour les appartements, la terrasse est le premier critère de tri des acheteurs. Pour une maison, une terrasse aménagée valorise fortement.", type:"options", cols:2, options:[
     {icon:"🏖️",label:"Grande terrasse > 20 m² (plein soleil)", val:1.12},
     {icon:"🪴",label:"Terrasse ou balcon 5-20 m²", val:1.07},
     {icon:"🌿",label:"Petit balcon < 5 m²", val:1.03},
@@ -2330,14 +2330,14 @@ const questions = [
   ]},
 
   // ── 🏢 COPROPRIÉTÉ (Q43–Q47 — appartement uniquement) ────
-  { section:"🏢 Copropriété & Charges", text:"Quel est l'état général de l'immeuble ?", hint:"Un immeuble bien entretenu rassure les acheteurs et les banques.", showIf:"appart", type:"options", cols:1, options:[
+  { section:"🏢 Copropriété & Charges", showIf:'appartement', text:"Quel est l'état général de l'immeuble ?", hint:"Un immeuble bien entretenu rassure les acheteurs et les banques.", showIf:"appart", type:"options", cols:1, options:[
     {icon:"💎",label:"Immeuble très bien entretenu, ravalement récent, parties communes soignées", val:1.12},
     {icon:"✅",label:"Bon état général — entretien régulier visible", val:1.04},
     {icon:"😐",label:"État moyen — quelques travaux visibles à prévoir", val:0.95},
     {icon:"🚨",label:"Immeuble dégradé — travaux importants votés ou à venir", val:0.80}
   ]},
 
-  { section:"🏢 Copropriété & Charges", text:"Montant des charges de copropriété mensuelles ?", hint:"Des charges élevées réduisent la capacité d'emprunt de l'acheteur — ça impacte directement votre prix.", showIf:"appart", type:"options", cols:2, options:[
+  { section:"🏢 Copropriété & Charges", showIf:'appartement', text:"Montant des charges de copropriété mensuelles ?", hint:"Des charges élevées réduisent la capacité d'emprunt de l'acheteur — ça impacte directement votre prix.", showIf:"appart", type:"options", cols:2, options:[
     {icon:"🏡",label:"Appartement sans copropriété (maison divisée, mono-propriété)", val:1.08},
     {icon:"💚",label:"Moins de 100 €/mois — charges très faibles", val:1.06},
     {icon:"✅",label:"100 à 250 €/mois — raisonnable", val:1.0},
@@ -2345,21 +2345,21 @@ const questions = [
     {icon:"💸",label:"Plus de 500 €/mois — très lourdes", val:0.85}
   ]},
 
-  { section:"🏢 Copropriété & Charges", text:"Y a-t-il des travaux votés en assemblée générale mais pas encore réalisés ?", hint:"Ces travaux sont à la charge de l'acquéreur — ils pèsent sur la négociation.", showIf:"appart", type:"options", cols:2, options:[
+  { section:"🏢 Copropriété & Charges", showIf:'appartement', text:"Y a-t-il des travaux votés en assemblée générale mais pas encore réalisés ?", hint:"Ces travaux sont à la charge de l'acquéreur — ils pèsent sur la négociation.", showIf:"appart", type:"options", cols:2, options:[
     {icon:"✅",label:"Aucun travaux voté — pas de charge à venir", val:1.05},
     {icon:"😐",label:"Petits travaux votés (< 5 000 € votre quote-part)", val:0.98},
     {icon:"⚠️",label:"Travaux importants votés (ravalement, toiture...)", val:0.88},
     {icon:"🚨",label:"Copropriété en procédure ou en grande difficulté", val:0.72}
   ]},
 
-  { section:"🏢 Copropriété & Charges", text:"Le règlement de copropriété autorise-t-il la location courte durée (Airbnb) ?", hint:"Dans certaines villes tendues, ce potentiel peut fortement valoriser un appartement.", showIf:"appart", type:"options", cols:2, options:[
+  { section:"🏢 Copropriété & Charges", showIf:'appartement', text:"Le règlement de copropriété autorise-t-il la location courte durée (Airbnb) ?", hint:"Dans certaines villes tendues, ce potentiel peut fortement valoriser un appartement.", showIf:"appart", type:"options", cols:2, options:[
     {icon:"✅",label:"Oui, autorisée — potentiel investisseur fort", val:1.06},
     {icon:"😐",label:"Non précisé dans le règlement (zone grise)", val:1.0},
     {icon:"❌",label:"Interdite par le règlement de copropriété", val:0.96},
     {icon:"🏙️",label:"Ville réglementée (Paris, Lyon...) — autorisation mairie requise", val:0.97}
   ]},
 
-  { section:"🏢 Copropriété & Charges", text:"La résidence dispose-t-elle de services ou équipements communs ?", hint:"Gardien, interphone, digicode, espaces verts entretenus, salle de sport...", showIf:"appart", type:"options", cols:2, options:[
+  { section:"🏢 Copropriété & Charges", showIf:'appartement', text:"La résidence dispose-t-elle de services ou équipements communs ?", hint:"Gardien, interphone, digicode, espaces verts entretenus, salle de sport...", showIf:"appart", type:"options", cols:2, options:[
     {icon:"🏊",label:"Résidence avec gardien, piscine ou salle de sport", val:1.1},
     {icon:"🌳",label:"Espaces verts entretenus, interphone, digicode", val:1.04},
     {icon:"😐",label:"Services basiques — boîtes aux lettres, local vélo", val:1.0},
@@ -4880,7 +4880,7 @@ function renderLeviersInline() {
   const sdbMauvaise      = a[30] >= 2;
   const huissMauv        = a[31] >= 2;
   const peinturesVetustes= a[28] >= 2;
-  const jardinNonAmenage = isMaison && a[20] >= 2;
+  const jardinNonAmenage = isMaison && a[20] === 3;  // friche uniquement
   const plombMauv        = a[34] >= 2;
   const elecNonConf      = a[35] >= 2;
 

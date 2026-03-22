@@ -581,12 +581,35 @@ async function generatePDF() {
   var isMaison    = (typeBien === 0 || typeBien === 2 || typeBien === 3);
   var isAppart    = (typeBien === 1);
 
+  // ── DEBUG — vérification des réponses clés pour les leviers ──────────
+  // Affiche dans la console les réponses utilisées pour chaque levier
+  // Permet de diagnostiquer en test si les answers sont bien transmis
+  console.log('[MonEstim Leviers] Réponses clés reçues :', {
+    typeBien:   a[8],
+    jardin:     a[20],  // 0=arboré 1=entretenu 2=non aménagé 3=friche
+    DPE:        a[37],  // 0=A 1=B 2=C 3=D 4=E 5=F/G
+    chauffage:  a[38],  // 0=PAC 1=gaz 2=convec 3=fioul
+    facture:    a[42],  // 0=<800€ 1=800-1500€ 2=1500-2500€ 3=>2500€
+    cuisine:    a[29],  // 0=HG 1=fonct 2=moderniser 3=refaire
+    sdb:        a[30],  // 0=rénovée 1=ok 2=vieillit 3=vétuste
+    huisseries: a[31],  // 0=triple 1=double ok 2=double ancien 3=simple
+    sols:       a[27],  // 0=parquet 1=contre 2=stratifié 3=moquette
+    peintures:  a[28],  // 0=premium 1=ok 2=rafraîchir 3=mauvais
+    plomberie:  a[34],  // 0=récente 1=ok 2=vétuste 3=plomb
+    electricite:a[35],  // 0=normes 1=prob ok 2=partiel 3=ancien
+    toiture:    a[33],  // 0=récente 1=ok 2=travaux 3=urgent (maison)
+    combles:    a[32],  // 0=isolé récent 1=isolé 2=minimal 3=aucun (maison)
+    luminosite: a[49],  // 0=except 1=très lum 2=correct 3=sombre
+    immeuble:   a[43],  // 0=très bon 1=bon 2=moyen 3=dégradé (appart)
+  });
+
+
   // Helper null-safe : retourne false si la réponse n'a pas été donnée (null/undefined)
   function rep(qi) { var v = a[qi]; return (v !== null && v !== undefined) ? v : -1; }
 
   // ── Terrain & extérieurs ──────────────────────────────────
   var jardinFriche      = rep(20) === 3;
-  var jardinNonAmenage  = rep(20) >= 2;
+  var jardinNonAmenage  = rep(20) >= 2;       // non aménagé (2) ou friche (3) → levier actif
   var jardinOK          = rep(20) >= 0 && rep(20) <= 1;
 
   // ── État général & travaux ────────────────────────────────
