@@ -2021,10 +2021,10 @@ const questions = [
   ]},
 
   { section:"📍 Localisation", text:"Type de commune ?", hint:"Le type de commune influence fortement la demande.", type:"options", cols:2, options:[
-    {icon:"🏙️",label:"Métropole / grande ville +100k hab.", val:1.5},
-    {icon:"🏘️",label:"Ville moyenne 20k-100k", val:1.2},
+    {icon:"🏙️",label:"Métropole / grande ville +100k hab.", val:1.3},
+    {icon:"🏘️",label:"Ville moyenne 20k-100k", val:1.12},
     {icon:"🌳",label:"Petite ville / bourg 5k-20k", val:1.0},
-    {icon:"🌻",label:"Village / zone rurale < 5k", val:0.8}
+    {icon:"🌻",label:"Village / zone rurale < 5k", val:0.88}
   ]},
 
   { section:"📍 Localisation", text:"Grande ville la plus proche — à quelle distance ?", hint:"Un bien à 20 min de Lyon ou Bordeaux n'a pas la même valeur qu'à 1h de route.", type:"options", cols:2, options:[
@@ -2181,7 +2181,7 @@ const questions = [
     {icon:"❌",label:"Aucun extérieur", val:1.0}
   ]},
 
-  { section:"🌳 Terrain & Extérieurs", text:"Présence d'une piscine ?", hint:"Dans le sud de la France, l'absence de piscine peut être un frein à la vente.", showIf:"maison", type:"options", cols:2, options:[
+  { section:"🌳 Terrain & Extérieurs", showIf:'maison', text:"Présence d'une piscine ?", hint:"Dans le sud de la France, l'absence de piscine peut être un frein à la vente.", showIf:"maison", type:"options", cols:2, options:[
     {icon:"🏊",label:"Piscine creusée et chauffée", val:1.15},
     {icon:"💦",label:"Piscine hors sol ou spa professionnel", val:1.05},
     {icon:"🤔",label:"Configuration idéale pour en installer une", val:1.02},
@@ -2249,14 +2249,14 @@ const questions = [
     {icon:"🥶",label:"Simple vitrage d'origine — déperditions importantes", val:0.87}
   ]},
 
-  { section:"🔧 État & Travaux", text:"L'isolation des combles a-t-elle été réalisée ?", hint:"30% des déperditions thermiques passent par la toiture. C'est le poste n°1 qui impacte le DPE.", showIf:"maison", type:"options", cols:2, options:[
+  { section:"🔧 État & Travaux", showIf:'maison', text:"L'isolation des combles a-t-elle été réalisée ?", hint:"30% des déperditions thermiques passent par la toiture. C'est le poste n°1 qui impacte le DPE.", showIf:"maison", type:"options", cols:2, options:[
     {icon:"🌡️",label:"Isolée récemment < 10 ans, > 30 cm de laine", val:1.1},
     {icon:"✅",label:"Isolée, mais isolation ancienne ou insuffisante", val:1.04},
     {icon:"😐",label:"Combles perdus, isolation minimale", val:0.97},
     {icon:"❌",label:"Aucune isolation des combles", val:0.87}
   ]},
 
-  { section:"🔧 État & Travaux", text:"État de la toiture ?", hint:"Une toiture à refaire représente 15 000 à 50 000€. C'est un point de négociation majeur.", showIf:"maison", type:"options", cols:2, options:[
+  { section:"🔧 État & Travaux", showIf:'maison', text:"État de la toiture ?", hint:"Une toiture à refaire représente 15 000 à 50 000€. C'est un point de négociation majeur.", showIf:"maison", type:"options", cols:2, options:[
     {icon:"✅",label:"Récente ou refaite < 10 ans", val:1.06},
     {icon:"👍",label:"En bon état, 10 à 20 ans", val:1.0},
     {icon:"⚠️",label:"Travaux à prévoir dans les 5 ans", val:0.92},
@@ -3225,7 +3225,29 @@ function getCityPrices(cityInput){
     }
   }
 
-  // Fallback département
+  // Mapping ville → code département pour les grandes villes
+  // (le fallback générique key.substring(0,2) ne fonctionne pas pour les noms de villes)
+  const CITY_DEPT = {
+    'strasbourg':'67','metz':'57','nancy':'54','reims':'51','rouen':'76',
+    'le havre':'76','caen':'14','amiens':'80','dijon':'21','besancon':'25',
+    'clermont ferrand':'63','saint etienne':'42','grenoble':'38','toulon':'83',
+    'aix en provence':'13','perpignan':'66','mulhouse':'68','brest':'29',
+    'le mans':'72','limoges':'87','tours':'37','angers':'49','rennes':'35',
+    'nantes':'44','bordeaux':'33','toulouse':'31','marseille':'13','lyon':'69',
+    'paris':'75','nice':'06','montpellier':'34','lille':'59','orleans':'45',
+    'chartres':'28','blois':'41','bourges':'18','poitiers':'86','la rochelle':'17',
+    'bayonne':'64','pau':'64','biarritz':'64','avignon':'84','nimes':'30',
+    'montauban':'82','agen':'47','perigueux':'24','brive la gaillarde':'19',
+    'aurillac':'15','le puy en velay':'43','mende':'48','privas':'07',
+    'valence':'26','chambery':'73','annecy':'74','gap':'05','digne les bains':'04',
+  };
+  const deptByCity = CITY_DEPT[key];
+  if(deptByCity && PRIX_DEPTS[deptByCity]){
+    const p=PRIX_DEPTS[deptByCity];
+    return {maison:[p[0],p[1],p[2]],appart:[p[3],p[4],p[5]]};
+  }
+
+  // Fallback département générique (fonctionne pour codes postaux type "75001 Paris")
   const dept=key.replace(/\s/g,"").substring(0,2);
   if(PRIX_DEPTS[dept]){
     const p=PRIX_DEPTS[dept];
