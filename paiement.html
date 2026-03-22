@@ -406,9 +406,11 @@ function goToPayment(offer) {
     } catch(e) {}
   }
   var baseUrl = offer === 'premium' ? STRIPE_PREMIUM : STRIPE_BASIC;
-  // Stocke dans localStorage (même domaine github.io → relay.html peut le relire)
+  // Double stockage : localStorage (desktop) + sessionStorage (iOS navigation privée)
+  // Sur iOS Safari en mode privé, localStorage est bloqué mais sessionStorage fonctionne
   if (payload) {
     try { localStorage.setItem('monestim_payload', payload); } catch(e) {}
+    try { sessionStorage.setItem('monestim_payload_stripe', payload); } catch(e) {}
   }
   window.top.location.href = baseUrl;
 }
