@@ -362,11 +362,13 @@ var STRIPE_PREMIUM = 'https://buy.stripe.com/test_dRm9AM1w491b33T7ymcbC00';
 var _offer = 'basic';
 try {
   var params = new URLSearchParams(window.location.search);
-  var raw = params.get('d') || sessionStorage.getItem('monestim_payload') || '';
+  var raw = params.get('d') || sessionStorage.getItem('monestim_payload') || localStorage.getItem('monestim_payload') || '';
   if (raw) {
     var payload = JSON.parse(decodeURIComponent(escape(atob(raw))));
     _offer = payload.offer || 'basic';
+    // Stockage double dès l'arrivée — survit au refresh iOS (pull-to-refresh)
     sessionStorage.setItem('monestim_payload', raw);
+    try { localStorage.setItem('monestim_payload', raw); } catch(e) {}
   }
 } catch(e) {}
 
