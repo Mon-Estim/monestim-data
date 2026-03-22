@@ -35,7 +35,7 @@
           <strong style="color:#fff;">Relancez simplement le questionnaire — votre prochaine estimation sera entièrement gratuite.</strong>
         </p>
         <a href="https://www.mon-estim.fr/" class="btn-primary" style="text-decoration:none; display:inline-flex;">← Relancer mon estimation</a>
-        <p style="margin-top:20px; font-size:12px; color:rgba(255,255,255,0.3);">Un problème ? contact@mon-estim.fr</p>
+        <p style="margin-top:20px; font-size:12px; color:rgba(255,255,255,0.3);">Un problème ? <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="32515d5c46535146725f5d5c1f5741465b5f1c5440">[email&#160;protected]</a></p>
       </div>timation n'ont pas pu être récupérées.
         </p>
         <a href="https://www.mon-estim.fr/" class="btn-primary" style="text-decoration:none; display:inline-flex;">Refaire l'estimation →</a>
@@ -142,6 +142,18 @@
         </div>
 
         <div style="text-align:center; padding:8px 0 24px;">
+
+          <!-- Bandeau anonymat & urgence -->
+          <div style="background:linear-gradient(135deg,rgba(201,168,76,0.08),rgba(201,168,76,0.03)); border:1px solid rgba(201,168,76,0.3); border-radius:12px; padding:16px 20px; margin-bottom:20px; text-align:left;">
+            <div style="display:flex; align-items:flex-start; gap:12px;">
+              <span style="font-size:20px; flex-shrink:0;">🔒</span>
+              <div>
+                <p style="font-size:13px; font-weight:700; color:var(--gold); margin:0 0 6px;">Estimation confidentielle — à télécharger maintenant</p>
+                <p style="font-size:12px; color:rgba(255,255,255,0.65); margin:0; line-height:1.6;">MonEstim ne conserve <strong style="color:rgba(255,255,255,0.85);">aucune donnée</strong> sur votre bien ni votre identité. Votre rapport existe uniquement dans cette session. <strong style="color:rgba(255,255,255,0.85);">Si vous fermez cette page, il sera définitivement perdu.</strong></p>
+              </div>
+            </div>
+          </div>
+
           <button onclick="downloadPDF()" class="btn-primary" id="btn-pdf" style="font-size:16px; padding:20px 52px; margin:0 auto;">
             Télécharger mon rapport PDF 7 pages →
           </button>
@@ -153,7 +165,7 @@
     </main>
 </div>
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 var hasPremium = true;
 var answers    = new Array(100).fill(null);
 var questions  = [];
@@ -324,11 +336,4 @@ setTimeout(function() {
     setTimeout(sendHeight, 1500);
   });
   window.addEventListener('resize', sendHeight);
-  if (window.MutationObserver) {
-    new MutationObserver(function() { setTimeout(sendHeight, 150); })
-      .observe(document.querySelector('.app') || document.body, { childList: true, subtree: true });
-  }
-})();
-</script>
-</body>
-</html>
+  if (wi

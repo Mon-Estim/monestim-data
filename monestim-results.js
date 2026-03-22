@@ -1353,6 +1353,8 @@ async function generatePDF() {
     'Elles ne constituent pas une expertise immobiliere professionnelle, ni une offre d\'achat ou de vente.',
     'La valeur reelle d\'un bien peut varier en fonction de facteurs non pris en compte dans ce questionnaire.',
     'MonEstim ne peut etre tenu responsable de toute decision prise sur la base de ces estimations.',
+    'CONFIDENTIALITE : MonEstim ne conserve aucune donnee sur votre bien ni votre identite. Ce rapport existe',
+    'uniquement dans votre session de navigation. Conservez ce PDF — il ne pourra pas etre regenere.',
   ];
   avLines.forEach((l,i) => {
     doc.setFont('helvetica','normal'); doc.setFontSize(6.5); doc.setTextColor(130,120,90);
