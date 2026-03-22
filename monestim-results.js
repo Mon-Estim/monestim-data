@@ -464,14 +464,14 @@ async function generatePDF() {
   const dims7 = [
     { key:'localisation', label:'Localisation',       icon:'📍', poids:'15%' },
     { key:'etat',         label:'État & Travaux',      icon:'🔧', poids:'18%' },
-    { key:'energie',      label:'Énergie & DPE',       icon:'⚡', poids:'17%' },
+    { key:'energie',      label:'Énergie & DPE',       icon:'⚡', poids:'20%' },
     { key:'standing',     label:'Standing & Atouts',   icon:'🏠', poids:'13%' },
     { key:'marche',       label:'Marché local',        icon:'📊', poids:'11%' },
     { key:'copro',        label:'Copro / Terrain',     icon:'🌳', poids:'8%'  },
     { key:'juridique',    label:'Juridique & Fiscal',  icon:'⚖️', poids:'5%'  },
   ];
 
-  let d7y = 30;
+  let d7y = 28;
   const barMaxW = W - 100;
 
   dims7.forEach((dim, idx) => {
@@ -479,7 +479,7 @@ async function generatePDF() {
     const col = score >= 70 ? GREEN : score >= 45 ? ORANGE : RED;
     const bgRow = idx % 2 === 0 ? [16,14,10] : [20,18,12];
 
-    rr(14, d7y, W-28, 26, 2, bgRow, null);
+    rr(14, d7y, W-28, 24, 2, bgRow, null);
 
     // Label adapté selon type de bien pour la dimension copro
     let label = dim.label;
@@ -491,16 +491,16 @@ async function generatePDF() {
     }
 
     // Icône + label
-    t(label, 22, d7y + 9, 9, 'bold', TEXT);
-    t('Poids : ' + dim.poids, 22, d7y + 17, 7, 'normal', TEXT3);
+    t(label, 22, d7y + 8, 9, 'bold', TEXT);
+    t('Poids : ' + dim.poids, 22, d7y + 15, 7, 'normal', TEXT3);
 
     // Score
     const scoreStr = score.toString();
-    t(scoreStr, W - 40, d7y + 11, 16, 'bold', col);
-    t('/100', W - 26, d7y + 14, 7, 'normal', TEXT3);
+    t(scoreStr, W - 40, d7y + 10, 16, 'bold', col);
+    t('/100', W - 26, d7y + 13, 7, 'normal', TEXT3);
 
     // Barre de progression
-    const barY = d7y + 19;
+    const barY = d7y + 18;
     const barW = W - 110;
     rr(22, barY, barW, 3, 1, [30,28,20], null);
     const fillW = Math.max(2, Math.round((score / 100) * barW));
@@ -510,7 +510,7 @@ async function generatePDF() {
     const lbl = score >= 80 ? 'Excellent' : score >= 70 ? 'Très bon' : score >= 60 ? 'Bon' : score >= 45 ? 'Moyen' : 'À améliorer';
     t(lbl, 22 + barW + 4, barY + 2.5, 7, 'normal', col);
 
-    d7y += 29;
+    d7y += 26;
   });
 
   // Score global encadré
@@ -580,80 +580,73 @@ async function generatePDF() {
   var typeBien    = a[8];                    // 0=maison/mitoyenne, 1=appart, 3=loft
   var isMaison    = (typeBien === 0 || typeBien === 2 || typeBien === 3);
   var isAppart    = (typeBien === 1);
-  var ancienBien  = a[25] <= 1;             // avant 1980 (Q25=année construction)
 
-  // ── INDEX DÉFINITIFS — 80 questions, audit mars 2025 ──────
-  // Q08=type  Q13=surface  Q20=terrain  Q21=jardin  Q22=constructible
-  // Q23=terrasse  Q24=piscine  Q25=parking  Q26=année  Q27=état général
-  // Q28=sols  Q29=murs  Q30=cuisine  Q31=SDB  Q32=huisseries
-  // Q33=combles  Q34=toiture  Q35=plomberie  Q36=électricité  Q37=trvx récents
-  // Q38=DPE  Q39=chauffage  Q42=confort été  Q43=facture énergie
-  // Q44=état immeuble(appart)  Q46=trvx copro(appart)
-  // Q49=matériaux/finitions  Q50=luminosité  Q52=rangements  Q76=urgence
+  // Helper null-safe : retourne false si la réponse n'a pas été donnée (null/undefined)
+  function rep(qi) { var v = a[qi]; return (v !== null && v !== undefined) ? v : -1; }
 
   // ── Terrain & extérieurs ──────────────────────────────────
-  var jardinFriche      = a[20] === 3;      // friche
-  var jardinNonAmenage  = a[20] >= 2;       // non aménagé ou friche → levier actif
-  var jardinOK          = a[20] <= 1;       // arboré (0) ou entretenu (1) → PAS de levier
+  var jardinFriche      = rep(20) === 3;
+  var jardinNonAmenage  = rep(20) >= 2;
+  var jardinOK          = rep(20) >= 0 && rep(20) <= 1;
 
   // ── État général & travaux ────────────────────────────────
-  var solMauvais        = a[27] === 3;      // moquette/carrelage 80s
-  var solPassable       = a[27] >= 2;       // stratifié ou pire
-  var solOK             = a[27] <= 1;       // parquet massif/contrecollé → PAS de levier
-  var peinturesARafr    = a[28] === 2;      // à rafraîchir
-  var peinturesMauv     = a[28] === 3;      // mauvais / humidité
-  var peinturesVetustes = a[28] >= 2;       // à rafraîchir ou pire → levier actif
-  var peinturesOK       = a[28] <= 1;       // premium ou bon état → PAS de levier
-  var cuisineAModern    = a[29] === 2;      // à moderniser
-  var cuisineARefaire   = a[29] === 3;      // à refaire
-  var cuisineAncienne   = a[29] >= 2;       // à moderniser ou pire → levier actif
-  var cuisineOK         = a[29] <= 1;       // haut gamme ou fonctionnelle → PAS de levier
-  var sdbVieillissante  = a[30] === 2;      // vieillissante
-  var sdbVetuste        = a[30] === 3;      // vétuste
-  var sdbMauvaise       = a[30] >= 2;       // vieillissante ou pire → levier actif
-  var sdbOK             = a[30] <= 1;       // rénovée/italienne → PAS de levier
-  var simpleVitrage     = a[31] === 3;      // simple vitrage
-  var doubleAncien      = a[31] === 2;      // double vitrage ancien
-  var huissMauv         = a[31] >= 2;       // double ancien ou simple → levier actif
-  var huissOK           = a[31] <= 1;       // triple ou double récent → PAS de levier
-  var comblesAucun      = a[32] === 3;      // aucune isolation
-  var comblesMinimal    = a[32] === 2;      // minimal
-  var comblesMalIsoles  = a[32] >= 2;       // minimal ou aucun → levier actif
-  var comblesOK         = a[32] <= 1;       // isolé récent/ancien → PAS de levier
-  var toitureUrgente    = a[33] === 3;      // infiltrations
-  var toitureTravaux    = a[33] === 2;      // travaux à prévoir
-  var toitureMauvaise   = a[33] >= 2;       // travaux ou urgent → levier actif
-  var toitureOK         = a[33] <= 1;       // récente ou bon état → PAS de levier
-  var plombMauv         = a[34] >= 2;       // partiellement vétuste ou plomb
-  var plombUrgent       = a[34] === 3;      // plomb/galvanisé
-  var elecNonConf       = a[35] >= 2;       // partiel ou ancienne installation
-  var elecUrgent        = a[35] === 3;      // fusibles, pas de terre
-  var elecOK            = a[35] <= 1;       // aux normes → PAS de levier
+  var solMauvais        = rep(27) === 3;
+  var solPassable       = rep(27) >= 2;
+  var solOK             = rep(27) >= 0 && rep(27) <= 1;
+  var peinturesARafr    = rep(28) === 2;
+  var peinturesMauv     = rep(28) === 3;
+  var peinturesVetustes = rep(28) >= 2;
+  var peinturesOK       = rep(28) >= 0 && rep(28) <= 1;
+  var cuisineAModern    = rep(29) === 2;
+  var cuisineARefaire   = rep(29) === 3;
+  var cuisineAncienne   = rep(29) >= 2;
+  var cuisineOK         = rep(29) >= 0 && rep(29) <= 1;
+  var sdbVieillissante  = rep(30) === 2;
+  var sdbVetuste        = rep(30) === 3;
+  var sdbMauvaise       = rep(30) >= 2;
+  var sdbOK             = rep(30) >= 0 && rep(30) <= 1;
+  var simpleVitrage     = rep(31) === 3;
+  var doubleAncien      = rep(31) === 2;
+  var huissMauv         = rep(31) >= 2;
+  var huissOK           = rep(31) >= 0 && rep(31) <= 1;
+  var comblesAucun      = rep(32) === 3;
+  var comblesMinimal    = rep(32) === 2;
+  var comblesMalIsoles  = rep(32) >= 2;
+  var comblesOK         = rep(32) >= 0 && rep(32) <= 1;
+  var toitureUrgente    = rep(33) === 3;
+  var toitureTravaux    = rep(33) === 2;
+  var toitureMauvaise   = rep(33) >= 2;
+  var toitureOK         = rep(33) >= 0 && rep(33) <= 1;
+  var plombMauv         = rep(34) >= 2;
+  var plombUrgent       = rep(34) === 3;
+  var elecNonConf       = rep(35) >= 2;
+  var elecUrgent        = rep(35) === 3;
+  var elecOK            = rep(35) >= 0 && rep(35) <= 1;
 
   // ── Énergie ───────────────────────────────────────────────
-  var dpeA_C            = a[37] <= 2;       // A, B ou C → PAS de levier
-  var dpeD              = a[37] === 3;      // D — amélioration possible
-  var dpeE              = a[37] === 4;      // E — attention
-  var dpeFG             = a[37] === 5;      // F ou G — passoire
-  var dpePassable       = a[37] >= 3;       // D ou pire → levier actif
-  var dpeMauvais        = a[37] >= 4;       // E, F ou G
-  var chauffConvec      = a[38] === 2;      // convecteurs électriques
-  var chauffFioul       = a[38] === 3;      // fioul/poêle
-  var chauffMauvais     = a[38] >= 2;       // convecteurs ou fioul → levier actif
-  var chauffOK          = a[38] <= 1;       // PAC ou gaz condensation → PAS de levier
-  var confortEteNul     = a[41] === 3;      // inconfort estival avéré
-  var factureLourde     = a[42] >= 2;       // > 1500€/an → levier actif
-  var factureOK         = a[42] <= 1;       // < 1500€ → PAS de levier
+  var dpeA_C            = rep(37) >= 0 && rep(37) <= 2;
+  var dpeD              = rep(37) === 3;
+  var dpeE              = rep(37) === 4;
+  var dpeFG             = rep(37) === 5;
+  var dpePassable       = rep(37) >= 3;
+  var dpeMauvais        = rep(37) >= 4;
+  var chauffConvec      = rep(38) === 2;
+  var chauffFioul       = rep(38) === 3;
+  var chauffMauvais     = rep(38) >= 2;
+  var chauffOK          = rep(38) >= 0 && rep(38) <= 1;
+  var confortEteNul     = rep(41) === 3;
+  var factureLourde     = rep(42) >= 2;
+  var factureOK         = rep(42) >= 0 && rep(42) <= 1;
 
   // ── Copropriété (appartement) ─────────────────────────────
-  var immeubleDegrade   = a[43] >= 2;       // état moyen ou dégradé
-  var travauxCopro      = a[45] >= 2;       // travaux importants votés
+  var immeubleDegrade   = rep(43) >= 2;
+  var travauxCopro      = rep(45) >= 2;
 
   // ── Standing & finitions ──────────────────────────────────
   var finitionsBasses   = a[48] >= 2;       // standard ou bas coût
   var finitionsOK       = a[48] <= 1;       // haut gamme ou bon standing
-  var bienSombre        = a[49] === 3;      // sombre (nord, vis-à-vis)
-  var rangementNul      = a[51] >= 3;       // aucun rangement intégré (Q51)
+  var bienSombre        = rep(49) === 3;      // sombre (nord, vis-à-vis)
+  var rangementNul      = rep(51) >= 3;       // aucun rangement intégré (Q51)
 
   // ── Poids de priorité pour tri ──
   var poids = { Critique:0, Excellent:1, 'Tres bon':2, Bon:3 };
@@ -890,22 +883,25 @@ async function generatePDF() {
     });
   }
 
-  let ly = 55;
+  let ly = 57;
   actifs.forEach((lev,i) => {
-    rr(14,ly,W-28,28,1,BG3,null);
-    // Numero
-    rr(14,ly,10,28,1,GOLD,null);
-    t(String(i+1),19,ly+16,12,'bold',BG,'center');
+    // Hauteur dynamique selon longueur description
+    const descLines = Math.ceil(lev.desc.length / 75);
+    const itemH = Math.max(32, 18 + descLines * 4.5);
+    rr(14,ly,W-28,itemH,1,BG3,null);
+    // Numéro
+    rr(14,ly,10,itemH,1,GOLD,null);
+    t(String(i+1),19,ly+itemH/2+3,12,'bold',BG,'center');
     // Titre + desc
-    t(lev.titre,28,ly+7,9,'bold',TEXT);
-    tw(lev.desc,28,ly+12,110,7,TEXT3,4);
+    t(lev.titre,28,ly+8,9,'bold',TEXT);
+    tw(lev.desc,28,ly+14,108,6.5,TEXT3,4.2);
     // Gain
-    rr(W-52,ly+4,36,8,1,[20,30,20],null);
-    t(lev.gain,W-34,ly+9.5,9,'bold',GREEN,'center');
+    rr(W-54,ly+5,38,9,1,[20,30,20],null);
+    t(lev.gain,W-35,ly+11,9,'bold',GREEN,'center');
     // Cout + ROI
-    t('Cout : '+lev.cout,W-16,ly+20,6.5,'normal',TEXT3,'right');
-    t('ROI : '+lev.roi,W-16,ly+25,6.5,'bold',GOLD,'right');
-    ly += 32;
+    t('Cout : '+lev.cout,W-16,ly+itemH-10,6,'normal',TEXT3,'right');
+    t('ROI : '+lev.roi,W-16,ly+itemH-5,6,'bold',GOLD,'right');
+    ly += itemH + 4;
   });
 
   // Conseil bloc
@@ -1017,39 +1013,40 @@ async function generatePDF() {
   const prixMed  = bandePrix[1] || baseM2;
   const prixHaut = bandePrix[2] || Math.round(baseM2 * 1.12);
 
-  rr(14, 28, W-28, 42, 2, [22,20,14], [201,168,76,0.3], 0.5);
-  t('Fourchette de prix au m2 a ' + villeLabel + ' (' + typeDVF + ')', 18, 36, 8, 'bold', GOLD);
-  t('Source : DVF — base notariale officielle DGFiP / data.gouv.fr', W-18, 36, 6, 'normal', TEXT3, 'right');
-  ln(18, 38, W-18, 38, BG3, 0.4);
+  // Bloc conteneur — plus haut pour respirer
+  rr(14, 28, W-28, 52, 2, [22,20,14], [201,168,76,0.3], 0.5);
+  t('Fourchette de prix au m\u00b2 \u2014 ' + villeLabel + ' (' + typeDVF + ')', W/2, 36, 8, 'bold', GOLD, 'center');
+  t('Source : DVF \u2014 DGFiP / data.gouv.fr \u2014 ventes notariees 2023-2025', W/2, 41, 5.5, 'normal', TEXT3, 'center');
+  ln(18, 44, W-18, 44, BG3, 0.4);
 
-  // 3 colonnes bas/médian/haut
-  const colW3 = (W-36) / 3;
-  [['Marche bas','Travaux importants',prixBas,ORANGE],
-   ['Marche median','Bien en etat correct',prixMed,GOLD],
-   ['Marche haut','Bien renove / neuf',prixHaut,GREEN]
-  ].forEach(([lbl,desc,val,col],i) => {
-    const cx = 18 + i*(colW3+3);
-    rr(cx, 41, colW3, 26, 2, [30,27,16], null);
-    box(cx, 41, colW3, 2, col, null);
-    t(lbl,  cx+colW3/2, 48, 6,   'bold',   col,   'center');
-    t(fmt(val)+' EUR/m2', cx+colW3/2, 56, 9, 'bold', TEXT,  'center');
-    t(desc, cx+colW3/2, 62, 5.5, 'normal', TEXT3, 'center');
+  // 3 colonnes bas/médian/haut — plus hautes, plus espacées
+  const colW3 = (W-40) / 3;
+  [['Marche bas', 'Biens avec travaux', prixBas, ORANGE],
+   ['Marche median', 'Reference notariale', prixMed, GOLD],
+   ['Marche haut', 'Biens renoves / neuf', prixHaut, GREEN]
+  ].forEach(([lbl, desc, val, col], i) => {
+    const cx = 16 + i * (colW3 + 4);
+    rr(cx, 47, colW3, 30, 2, [30,27,16], null);
+    box(cx, 47, colW3, 2.5, col, null);
+    t(lbl,  cx+colW3/2, 55,  6,   'bold',   col,  'center');
+    t(fmt(val)+' \u20ac/m\u00b2', cx+colW3/2, 64, 10, 'bold', TEXT, 'center');
+    t(desc, cx+colW3/2, 73,  5.5, 'normal', TEXT3,'center');
   });
 
-  // Positionnement MonEstim
+  // Positionnement MonEstim — en dessous du bloc
   const prixMoyV  = Math.round((prixBas+prixMed+prixHaut)/3);
   const diffV     = baseM2 - prixMoyV;
   const diffVpct  = prixMoyV > 0 ? Math.round(Math.abs(diffV)/prixMoyV*100) : 0;
   const diffVcol  = diffV >= 0 ? GREEN : ORANGE;
   const diffVlbl  = diffV === 0 ? 'Votre estimation est dans la moyenne exacte du marche de '+villeLabel :
-    diffV > 0 ? 'Votre bien est valorise +'+diffVpct+'% vs la moyenne marche de '+villeLabel+' — qualite justifiee par le score' :
-    'Votre bien est positionne -'+diffVpct+'% sous la moyenne — potentiel d\'optimisation identifie';
-  rr(14, 70, W-28, 10, 1, [18,26,20], [72,200,130,0.25], 0.5);
-  t('MonEstim : '+fmt(baseM2)+' EUR/m2', 20, 76.5, 8, 'bold', GOLD);
-  t(diffVlbl, W-18, 76.5, 6.5, 'normal', diffVcol, 'right');
+    diffV > 0 ? 'Votre bien est valorise +'+diffVpct+'% vs la moyenne marche de '+villeLabel+' \u2014 qualite justifiee par le score' :
+    'Votre bien est positionne -'+diffVpct+'% sous la moyenne \u2014 potentiel d\'optimisation identifie';
+  rr(14, 82, W-28, 11, 1, [18,26,20], [72,200,130,0.25], 0.5);
+  t('MonEstim : '+fmt(baseM2)+' \u20ac/m\u00b2', 20, 89, 8, 'bold', GOLD);
+  t(diffVlbl, W-18, 89, 6.5, 'normal', diffVcol, 'right');
 
   // ── MÉTHODE DE VALORISATION ────────────────────────────────
-  let liqY = 86;
+  let liqY = 98;
 
   // Coefs dimensionnels depuis lastPrix
   const cLocD   = safeNum(p.coefLoc,   1.00);
