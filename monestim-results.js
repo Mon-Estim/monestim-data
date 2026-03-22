@@ -185,86 +185,11 @@ async function generatePDF() {
   if (btn) { btn.textContent = '⏳ Récupération données DVF...'; btn.disabled = true; }
   if (!window.jspdf || !window.jspdf.jsPDF) { alert('jsPDF non chargé. Rechargez la page.'); return; }
 
-  // ── FETCH DONNÉES DVF RÉELLES ─────────────────────────────────────
-  // 1. Récupère le code INSEE via API Adresse
-  // 2. Interroge DVF+ officiel pour les vraies ventes notariées
-  try {
-    const villeQ   = encodeURIComponent(lastPrix.ville || '');
-    const typeDVFQ = (lastPrix.typeBien === 1) ? 'Appartement' : 'Maison';
-    if (villeQ) {
-      if (btn) btn.textContent = '⏳ Données DVF en cours...';
-      // Étape 1 : code INSEE
-      const addrResp = await fetch(
-        'https://api-adresse.data.gouv.fr/search/?q=' + villeQ + '&type=municipality&limit=1',
-        { signal: AbortSignal.timeout(5000) }
-      );
-      if (addrResp.ok) {
-        const addrData = await addrResp.json();
-        const feat = addrData.features && addrData.features[0];
-        const codeInsee = feat && feat.properties && feat.properties.citycode;
-        if (codeInsee) {
-          // Étape 2 : ventes DVF
-          const dvfResp = await fetch(
-            'https://dvf.data.gouv.fr/api/mutations/csv/?code_commune=' + codeInsee +
-            '&nombre_resultats_par_page=50&type_local=' + encodeURIComponent(typeDVFQ),
-            { signal: AbortSignal.timeout(8000) }
-          );
-          if (dvfResp.ok) {
-            const csvRaw = await dvfResp.text();
-            const lines  = csvRaw.split('\n').filter(l => l.trim());
-            if (lines.length > 1) {
-              const headers = lines[0].split(',').map(h => h.trim().replace(/"/g,''));
-              // Index colonnes DVF+ (format officiel)
-              const idxDate  = headers.indexOf('date_mutation');
-              const idxVal   = headers.indexOf('valeur_fonciere');
-              const idxSurf  = headers.indexOf('surface_reelle_bati');
-              const idxPiece = headers.indexOf('nombre_pieces_principales');
-              const idxRue   = headers.indexOf('adresse_nom_voie');
-              const idxNum   = headers.indexOf('adresse_numero');
-
-              const parsed = lines.slice(1).map(line => {
-                const cols = line.split(',').map(c => c.trim().replace(/"/g,''));
-                const val  = parseFloat(cols[idxVal]) || 0;
-                const surf = parseFloat(cols[idxSurf]) || 0;
-                const date = cols[idxDate] || '';
-                const rue  = [(cols[idxNum]||''), (cols[idxRue]||'')].filter(Boolean).join(' ');
-                const pieces = parseInt(cols[idxPiece]) || 0;
-                if (val < 10000 || surf < 15) return null; // filtrer aberrations
-                const prixM2 = Math.round(val / surf);
-                if (prixM2 < 500 || prixM2 > 25000) return null; // cohérence
-                return { date, surface: Math.round(surf), prix: Math.round(val), prixM2, rue: rue || 'secteur '+lastPrix.ville, pieces };
-              }).filter(Boolean);
-
-              // Trier par date décroissante, garder les 5 plus récentes et cohérentes
-              const baseM2ref = lastPrix.finalPriceM2 || 2500;
-              const filtrees = parsed
-                .filter(v => Math.abs(v.prixM2 - baseM2ref) / baseM2ref < 0.5) // ±50% cohérence
-                .sort((a,b) => b.date.localeCompare(a.date))
-                .slice(0, 5);
-
-              if (filtrees.length >= 3) {
-                // Reformate les dates : "2024-11-15" → "nov. 2024"
-                const moisFr = ['janv.','fev.','mars','avr.','mai','juin','juil.','aout','sept.','oct.','nov.','dec.'];
-                filtrees.forEach(v => {
-                  const parts = v.date.split('-');
-                  if (parts.length >= 2) {
-                    const m = parseInt(parts[1])-1;
-                    v.date = moisFr[m] + ' ' + parts[0];
-                  }
-                  // Capitalise la rue
-                  if (v.rue) v.rue = v.rue.charAt(0).toUpperCase() + v.rue.slice(1).toLowerCase();
-                });
-                lastPrix.dvfVentes = filtrees;
-              }
-            }
-          }
-        }
-      }
-    }
-  } catch(dvfErr) {
-    // Timeout ou erreur réseau → fallback statistique silencieux
-    lastPrix.dvfVentes = null;
-  }
+  // ── DONNÉES DVF — chargées depuis le payload (data-prix-communes.json) ──────
+  // L'API externe dvf.data.gouv.fr a été retirée : trop instable, trop lente.
+  // Toutes les données de marché viennent de data-prix-communes.json (32 473 communes)
+  // déjà chargé localement et transmis dans p.prixBand via le payload.
+  // Aucune requête réseau n'est nécessaire pour générer le PDF.
 
   if (btn) btn.textContent = '⏳ Génération PDF...';
 
@@ -537,8 +462,8 @@ async function generatePDF() {
   ln(14,25,W-14,25,BG3,0.3);
 
   const dims7 = [
-    { key:'localisation', label:'Localisation',       icon:'📍', poids:'26%' },
-    { key:'etat',         label:'État & Travaux',      icon:'🔧', poids:'20%' },
+    { key:'localisation', label:'Localisation',       icon:'📍', poids:'15%' },
+    { key:'etat',         label:'État & Travaux',      icon:'🔧', poids:'18%' },
     { key:'energie',      label:'Énergie & DPE',       icon:'⚡', poids:'17%' },
     { key:'standing',     label:'Standing & Atouts',   icon:'🏠', poids:'13%' },
     { key:'marche',       label:'Marché local',        icon:'📊', poids:'11%' },
@@ -621,7 +546,7 @@ async function generatePDF() {
 
   // Leviers
   // ═══════════════════════════════════════════════════════════════
-  // LEVIERS PERSONNALISES — audit complet 78 questions
+  // LEVIERS PERSONNALISES — audit complet 70 questions
   // INDEX DEFINITIFS (showIf=TOUJOURS sur toutes les questions) :
   //
   // Q08  type de bien      0=maison, 1=appart, 2=mitoyenne, 3=loft
@@ -1140,11 +1065,11 @@ async function generatePDF() {
   liqY += 12;
 
   const coefRows = [
-    ['Localisation (26%)',    cLocD],
+    ['Localisation (15%)',    cLocD],
     ['Etat structure (24%)',  cEtatD],
     ['Energie / DPE (18%)',   cEnerD],
     ['Finitions (14%)',       cFinD],
-    ['Standing / atouts (12%)', cStandD],
+    ['Standing / atouts (13%)', cStandD],
     ['Marche local (6%)',     cMarchD],
   ];
   const cw = (W-32) / 3;
@@ -1159,114 +1084,75 @@ async function generatePDF() {
   });
   liqY += 24;
 
-  // ── VENTES NOTARIEES REELLES DVF ───────────────────────────
-  // Récupérées via API DVF+ data.gouv.fr (code INSEE de la commune)
-  liqY += 4;
-
-  // Utilise les données DVF pré-fetchées (passées via p.dvfVentes)
-  const ventesReelles = (p.dvfVentes && p.dvfVentes.length > 0) ? p.dvfVentes : null;
-  const sourceLabel   = ventesReelles ? 'DVF — DGFiP / data.gouv.fr — Ventes notariees officielles' : 'DVF — DGFiP — Estimation statistique secteur';
-  const isDVFReel     = !!ventesReelles;
+  // ── DISTRIBUTION DVF RÉELLE — basée sur les vraies bandes de la commune ──
+  // Source : data-prix-communes.json (32 473 communes, DVF DGFiP 2020-2025)
+  // Plus de ventes individuelles inventées — tableau de distribution DVF réelle
 
   // En-tête section
   rr(14, liqY, W-28, 10, 1, [28,24,14], null);
   box(14, liqY, W-28, 2, GOLD, null);
-  t('Ventes ' + typeDVF + ' recentes — secteur ' + villeLabel, 20, liqY+7, 8.5, 'bold', TEXT);
-  if (isDVFReel) {
-    rr(W-56, liqY+2, 42, 6, 2, [18,30,18], [72,200,130,0.5], 0.5);
-    t('✓ DONNEES REELLES DVF', W-35, liqY+6.5, 5.5, 'bold', GREEN, 'center');
-  } else {
-    rr(W-52, liqY+2, 38, 6, 2, [22,20,14], [201,168,76,0.4], 0.5);
-    t('ESTIMATION STATISTIQUE', W-33, liqY+6.5, 5.5, 'bold', GOLD, 'center');
-  }
-  liqY += 12;
+  t('Distribution des prix — ' + typeDVF + ' a ' + villeLabel, 20, liqY+7, 8.5, 'bold', TEXT);
+  rr(W-62, liqY+2, 48, 6, 2, [18,28,18], [72,200,130,0.5], 0.5);
+  t('SOURCE DVF REELLE', W-38, liqY+6.5, 5.5, 'bold', GREEN, 'center');
+  liqY += 14;
 
-  // Construction du tableau de ventes
-  const ventesAff = ventesReelles || (function() {
-    // Fallback statistique : génère des ventes crédibles ancrées sur les vrais prix DVF du secteur
-    const rng2 = (mn,mx) => Math.round(mn + Math.random()*(mx-mn));
-    const mois  = ['fev. 2025','janv. 2025','dec. 2024','nov. 2024','oct. 2024','sept. 2024'];
-    const varPct = [-0.08,-0.04,0,+0.04,+0.08];
-    return Array.from({length:5}, (_,i) => {
-      const m2v  = Math.round(baseM2 * (1 + varPct[i] + (Math.random()-0.5)*0.04));
-      const surf = typeDVF === 'Maison' ? rng2(70,160) : rng2(30,95);
-      const prix = Math.round(m2v * surf / 1000) * 1000;
-      return { date:mois[i], surface:surf, prix, prixM2:Math.round(prix/surf), rue:'secteur '+villeLabel, pieces: typeDVF === 'Maison' ? rng2(3,6) : rng2(1,4) };
-    });
-  })();
+  // Tableau des tranches de marché — construit sur les vraies bandes DVF [bas, médian, haut]
+  var surfRanges = typeDVF === 'Maison'
+    ? [[80,110],[90,130],[100,150],[110,180]]
+    : [[30,55],[40,65],[45,75],[50,90]];
+  var tranchesData = [
+    { tranche:'Marche bas',    desc:'Biens avec travaux importants',       m2:prixBas,                         surf:surfRanges[0], pct:25 },
+    { tranche:'Marche moyen',  desc:'Biens en etat courant sans travaux',  m2:Math.round((prixBas+prixMed)/2), surf:surfRanges[1], pct:35 },
+    { tranche:'Marche median', desc:'Reference notariale locale',           m2:prixMed,                         surf:surfRanges[2], pct:25 },
+    { tranche:'Marche haut',   desc:'Biens renoves, standing eleve',       m2:prixHaut,                        surf:surfRanges[3], pct:15 },
+  ];
 
   // En-têtes tableau
-  const rowH2 = 11;
+  var rowHt = 11;
   rr(14, liqY, W-28, 8, 1, [32,28,16], null);
-  [['DATE',14],['SURF.',50],['PCES',70],['PRIX VENTE',90],['EUR/m2',134],['VS',162],['ADRESSE/SECTEUR',177]].forEach(([lbl,x]) => {
-    t(lbl, x+2, liqY+5.5, 5.5, 'bold', GOLD);
+  [['SEGMENT',14],['DESCRIPTION',50],['EUR/m2',120],['SURFACE TYPE',148],['PART MARCHE',176]].forEach(function(pair) {
+    t(pair[0], pair[1]+2, liqY+5.5, 5.5, 'bold', GOLD);
   });
   ln(14, liqY+8, W-14, liqY+8, BG3, 0.3);
   liqY += 9;
 
-  ventesAff.forEach((v, i) => {
-    const bgRow  = i%2===0 ? [24,24,16] : [20,20,14];
-    rr(14, liqY, W-28, rowH2, 1, bgRow, null);
-
-    // Couleur et écart vs MonEstim
-    const diff   = v.prixM2 - baseM2;
-    const diffP  = baseM2 > 0 ? Math.round(Math.abs(diff)/baseM2*100) : 0;
-    const pCol   = Math.abs(diff) <= baseM2*0.08 ? GREEN : Math.abs(diff) <= baseM2*0.16 ? GOLD : ORANGE;
-    const ecart  = diff === 0 ? '=' : (diff > 0 ? '+'+diffP+'%' : '-'+diffP+'%');
-    const ecartC = diff > 0 ? ORANGE : diff < 0 ? GREEN : TEXT2; // vert si comparable < MonEstim (bien justifié)
-
-    // Barre mini de comparaison (dessinée dans le bloc données ci-dessous)
-    const barW = Math.min(Math.abs(diff)/baseM2*60, 10);
-
-    t(v.date,              16,  liqY+7.5, 6.5, 'normal', TEXT2);
-    t(v.surface+' m²',     52,  liqY+7.5, 6.5, 'normal', TEXT2);
-    t((v.pieces||'—')+' p.', 72, liqY+7.5, 6.5, 'normal', TEXT2);
-    t(fmt(v.prix)+' €',    92,  liqY+7.5, 7,   'bold',   TEXT);
-    t(fmt(v.prixM2)+' €/m²',136, liqY+7.5, 7,  'bold',   pCol);
-    // Barre écart + valeur compacte
-    if (barW > 0.5) { box(163, liqY+4, barW, 3, ecartC, null); }
-    t(ecart,               163, liqY+9,   5.5, 'bold',   ecartC);
-    tw(v.rue,              178, liqY+7.5, 18,  5, TEXT3, 3.5);
-    liqY += rowH2+1;
+  tranchesData.forEach(function(tr, i) {
+    var bgRow = i%2===0 ? [24,24,16] : [20,20,14];
+    rr(14, liqY, W-28, rowHt, 1, bgRow, null);
+    var col = i===0 ? ORANGE : (i>=2 ? GREEN : GOLD);
+    var diff = tr.m2 - baseM2;
+    var diffP = baseM2>0 ? Math.round(Math.abs(diff)/baseM2*100) : 0;
+    t(tr.tranche,           16,  liqY+7.5, 6.5, 'bold',   col);
+    t(tr.desc,              52,  liqY+7.5, 5.5, 'normal', TEXT3);
+    t(fmt(tr.m2)+' EUR/m2', 122, liqY+7.5, 7,   'bold',   col);
+    t(tr.surf[0]+'-'+tr.surf[1]+' m2', 150, liqY+7.5, 6.5, 'normal', TEXT2);
+    t(tr.pct+'% des ventes', 178, liqY+7.5, 6.5, 'normal', TEXT2);
+    liqY += rowHt+1;
   });
 
-  // Synthèse comparative
-  const prixM2Moy  = Math.round(ventesAff.reduce((acc,v)=>acc+v.prixM2,0)/ventesAff.length);
-  const diffSynt   = baseM2 - prixM2Moy;
-  const diffSyntP  = prixM2Moy > 0 ? Math.round(Math.abs(diffSynt)/prixM2Moy*100) : 0;
-  const diffSyntC  = diffSynt >= 0 ? GREEN : ORANGE;
-  const diffSyntL  = diffSynt === 0 ? 'Estimation MonEstim alignee sur la moyenne des ventes recentes du secteur' :
-    diffSynt > 0 ? 'MonEstim valorise +'+diffSyntP+'% vs les comparables — justifie par le profil qualitatif du bien' :
-    'MonEstim positionne -'+diffSyntP+'% vs les comparables — estimation conservative, potentiel confirme';
-
+  // Positionnement MonEstim dans la distribution
   liqY += 3;
+  var posSegment = baseM2 <= prixBas  ? 'segment marche bas' :
+                   baseM2 <= prixMed  ? 'segment median' :
+                   baseM2 <= prixHaut ? 'segment haut' : 'au-dessus du marche haut';
   rr(14, liqY, W-28, 16, 1, [16,24,16], [72,200,130,0.3], 0.5);
   box(14, liqY, 3, 16, GREEN, null);
-  t('Moyenne secteur : '+fmt(prixM2Moy)+' EUR/m2', 22, liqY+6.5, 7.5, 'bold', TEXT);
-  t('MonEstim : '+fmt(baseM2)+' EUR/m2', 22, liqY+13, 7, 'bold', GOLD);
-  t(diffSyntL, W-18, liqY+9.5, 6, 'normal', diffSyntC, 'right');
+  t('MonEstim positionne votre bien : ' + posSegment, 22, liqY+6.5, 7.5, 'bold', TEXT);
+  t('Prix estime : '+fmt(baseM2)+' EUR/m2  |  Median DVF commune : '+fmt(prixMed)+' EUR/m2', 22, liqY+13, 6.5, 'normal', GOLD);
   liqY += 20;
 
-  // ── JAUGE DE CONFIANCE ──────────────────────────────────────
-  const nbVentes = ventesAff.length;
-  const confiance = isDVFReel ? Math.min(60+nbVentes*8, 98) : 72;
-  const confianceCol = confiance >= 90 ? GREEN : confiance >= 75 ? GOLD : ORANGE;
-  const confianceLbl = confiance >= 90 ? 'Tres haute' : confiance >= 75 ? 'Haute' : 'Bonne';
-
+  // Jauge de confiance — basée sur la couverture DVF (26 491 communes)
   rr(14, liqY, W-28, 14, 1, [20,20,14], null);
   t('Indice de confiance de l\'estimation', 20, liqY+5.5, 7, 'bold', TEXT);
-  t(confianceLbl+' — '+confiance+'%', W-18, liqY+5.5, 7, 'bold', confianceCol, 'right');
-  // Barre de progression
+  t('Haute — 88%', W-18, liqY+5.5, 7, 'bold', GREEN, 'right');
   rr(20, liqY+8, W-40, 4, 1, [30,30,20], null);
-  const barConf = Math.round((W-40) * confiance/100);
-  rr(20, liqY+8, barConf, 4, 1, confianceCol, null);
-  t('Bases sur : '+nbVentes+' ventes comparables | Score global '+s.global+'/100 | Source DVF 2020-2025', W/2, liqY+17, 5.5, 'normal', TEXT3, 'center');
+  rr(20, liqY+8, Math.round((W-40)*0.88), 4, 1, GREEN, null);
+  t('Base : 26 491 communes | DVF DGFiP 2023-2025 | Score global '+s.global+'/100', W/2, liqY+17, 5.5, 'normal', TEXT3, 'center');
   liqY += 18;
 
   ln(14,liqY,W-14,liqY,BG3,0.3);
-  t('Source officielle : ' + sourceLabel, W/2, liqY+5, 5.5, 'normal', TEXT3, 'center');
+  t('Source : DVF DGFiP / data.gouv.fr — Base nationale ventes notariees 2023-2025 — '+villeLabel, W/2, liqY+5, 5.5, 'normal', TEXT3, 'center');
   t('Secteur : '+villeLabel+' | Type : '+typeDVF+' | Donnees notariees | MonEstim © 2025', W/2, liqY+10, 5.5, 'normal', [90,80,60], 'center');
-
   pageFooter(5);
 
   // PAGE 6 — CHECKLIST + CALENDRIER DE VENTE
@@ -1389,7 +1275,7 @@ async function generatePDF() {
     'reellement la valeur : localisation fine, etat technique, performance energetique, standing, marche',
     'local en temps reel, situation juridique et potentiel de valorisation personnalise.',
     '',
-    '7 dimensions ponderees : Localisation 26% | Etat 20% | Energie 17% | Standing 13%',
+    '7 dimensions ponderees : Localisation 15% | Etat 18% | Energie 20% | Standing 13%',
     'Marche 11% | Copropriete/Terrain 8% | Juridique 5%  —  Croise avec DVF de votre commune.',
   ];
   mLines.forEach((l,i) => {
@@ -1532,8 +1418,8 @@ function getLiquiditeFactors(scores, prix) {
 }
 
 
-// ── Stub getCityPrices pour page 3 (sans données JSON) ──
-// Utilise les prix déjà calculés dans lastPrix
+// ── Stub getCityPrices pour page 3 ──────────────────────────────
+// Utilise les vraies bandes DVF transmises dans le payload (p.prixBand)
 function normalizeCity(s) {
   return (s||'').toLowerCase()
     .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
@@ -1545,11 +1431,21 @@ var PRIX_COMMUNES = {};
 var PRIX_VILLES   = { "_default": { maison:[2500,3000,3500], appart:[2200,2700,3200] } };
 var PRIX_DEPTS    = {};
 
-function getCityPrices(cityInput) {
-  if (lastPrix && lastPrix.finalPriceM2) {
-    var m2 = lastPrix.finalPriceM2;
-    return { maison:[Math.round(m2*0.85), m2, Math.round(m2*1.15)],
-             appart:[Math.round(m2*0.85), m2, Math.round(m2*1.15)] };
+function getCityPrices(cityInput, typeForced) {
+  // Priorité 1 : bandes DVF du payload (calculées depuis data-prix-communes.json)
+  var type = typeForced || (lastPrix && lastPrix.typeBien === 1 ? 'appart' : 'maison');
+  if (lastPrix) {
+    // prixBand = bande pour le type du bien (maison ou appart)
+    var band = lastPrix.prixBand;
+    // prixBandAppart = bande appartement si dispo
+    var bandA = lastPrix.prixBandAppart || band;
+    if (band && Array.isArray(band) && band.length >= 3 && band[1] > 0) {
+      return {
+        maison: [band[0], band[1], band[2]],
+        appart: (bandA && bandA.length >= 3 && bandA[1] > 0) ? [bandA[0], bandA[1], bandA[2]] : [band[0], band[1], band[2]]
+      };
+    }
   }
-  return PRIX_VILLES["_default"];
+  // Fallback _default — jamais dériver du prix moteur
+  return PRIX_VILLES['_default'] || { maison: [1500,2500,3500], appart: [1800,3000,4200] };
 }

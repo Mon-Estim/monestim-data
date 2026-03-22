@@ -1664,7 +1664,7 @@
       <h1 class="intro-title">
         Ce que vaut <em>vraiment</em><br>
         votre bien.<br>
-        <span class="title-sub">Estimation personnalisée sur 78 questions.</span>
+        <span class="title-sub">Estimation personnalisée sur 70 questions.</span>
       </h1>
 
       <!-- ENGAGEMENTS -->
@@ -1708,7 +1708,7 @@
           <div style="font-size:11px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:rgba(72,200,130,0.95); margin-bottom:10px;">✦ MonEstim</div>
           <ul style="list-style:none; display:flex; flex-direction:column; gap:7px;">
             <li style="font-size:13px; color:rgba(200,240,215,0.95); font-weight:500;">Résultat en 10 minutes — sans rendez-vous</li>
-            <li style="font-size:13px; color:rgba(200,240,215,0.95); font-weight:500;">78 questions réelles, zéro biais commercial</li>
+            <li style="font-size:13px; color:rgba(200,240,215,0.95); font-weight:500;">70 questions réelles, zéro biais commercial</li>
             <li style="font-size:13px; color:rgba(200,240,215,0.95); font-weight:500;">Ni nom, ni adresse, ni téléphone collectés</li>
             <li style="font-size:13px; color:rgba(200,240,215,0.95); font-weight:500;">Données DVF officielles — prix réels du marché</li>
           </ul>
@@ -1717,7 +1717,7 @@
 
       <div style="background:var(--dark-2); border:1px solid transparent; background-image:linear-gradient(var(--dark-2),var(--dark-2)), linear-gradient(135deg,#B8960C,#E8C97A,#C9A84C,#F5E4A0,#C9A84C); background-origin:border-box; background-clip:padding-box,border-box; border-radius:16px; padding:28px 32px; margin-bottom:32px; animation: fadeIn 0.6s ease 0.3s both;">
         <p class="intro-desc" style="margin-bottom:16px;">
-          MonEstim croise <strong>78 questions sur 7 dimensions pondérées</strong> avec les ventes notariées réelles des 5 dernières années de votre secteur (base DVF). Bien au-delà des outils gratuits — qui ont tout intérêt à vous donner le chiffre qui vous fait signer un mandat.
+          MonEstim croise <strong>70 questions sur 7 dimensions pondérées</strong> avec les ventes notariées réelles des 5 dernières années de votre secteur (base DVF). Bien au-delà des outils gratuits — qui ont tout intérêt à vous donner le chiffre qui vous fait signer un mandat.
         </p>
         <div style="height:1px; background:linear-gradient(90deg,transparent,rgba(201,168,76,0.3),transparent); margin-bottom:16px;"></div>
         <p class="intro-desc" style="margin-bottom:0;">
@@ -1730,7 +1730,7 @@
         <div class="methode-title">✦ Notre méthode — 7 dimensions analysées</div>
         <div class="methode-grid">
           <div class="methode-item">
-            <div class="methode-item-top"><span class="methode-item-name">📍 Localisation</span><span class="methode-item-pct">26%</span></div>
+            <div class="methode-item-top"><span class="methode-item-name">📍 Localisation</span><span class="methode-item-pct">15%</span></div>
             <div class="methode-item-bar"><div class="methode-item-fill" style="width:26%"></div></div>
             <div class="methode-item-desc">Région, commune, distances, transports</div>
           </div>
@@ -1834,7 +1834,7 @@
         </div>
         <div id="geo-enrich-info" style="display:none; margin-top:-8px; margin-bottom:12px; padding:8px 12px; background:rgba(201,168,76,0.06); border:1px solid rgba(201,168,76,0.15); border-radius:8px;"></div>
         <button class="btn-primary btn-cta-main" id="btn-start-quiz" onclick="startQuizWithOffer()" style="opacity:0.4; pointer-events:none;">
-          Commencer les 78 questions →
+          Commencer les 70 questions →
         </button>
       </div>
 
@@ -1898,7 +1898,7 @@
           Votre estimation<br>est <em>prête</em>.
         </h2>
         <p style="font-size:15px;color:var(--text-muted);max-width:480px;margin:0 auto 36px;line-height:1.7;">
-          78 questions analysées. Résultat calculé sur les ventes réelles de votre secteur.
+          70 questions analysées. Résultat calculé sur les ventes réelles de votre secteur.
         </p>
         <div id="upsell-felicitations" style="display:none;margin-bottom:32px;">
           <div style="background:var(--dark-2);border:1px solid transparent;
@@ -2687,6 +2687,8 @@ function showScreen(id) {
   // Scroll en haut à chaque changement d'écran
   window.scrollTo(0, 0);
   try { document.documentElement.scrollTop = 0; document.body.scrollTop = 0; } catch(e) {}
+  // Demander à la page parente (Systeme.io) de scroller en haut aussi
+  try { window.parent.postMessage({ type: 'monestim-scroll-top' }, '*'); } catch(e) {}
   if (window.notifyHeight) window.notifyHeight();
 }
 
@@ -2788,13 +2790,13 @@ function getSectionCard(sectionName) {
 }
 
 const SECTION_META = {
-  "📍 Localisation":       { poids: "26%", pct: 26 },
+  "📍 Localisation":       { poids: "15%", pct: 15 },
   "🏠 Type & Structure":   { poids: null,  pct: 0  },
   "🌳 Terrain & Extérieurs":{ poids: null, pct: 0  },
-  "🔧 État & Travaux":     { poids: "20%", pct: 20 },
+  "🔧 État & Travaux":     { poids: "18%", pct: 18 },
   "⚡ Énergie & DPE":      { poids: "17%", pct: 17 },
   "🏢 Copropriété & Charges":{ poids: "8%", pct: 8 },
-  "✨ Finitions & Standing":{ poids: "13%", pct: 13 },
+  "✨ Finitions & Standing":{ poids: "14%", pct: 14 },
   "🔍 Nuisances & Confort":{ poids: null,  pct: 0  },
   "🏗️ Dépendances & Annexes":{ poids: null, pct: 0 },
   "⚖️ Juridique & Fiscalité":{ poids: "5%", pct: 5 },
@@ -3041,9 +3043,10 @@ function renderQuestion() {
   }
   // Notifie la hauteur à la page parente après rendu
   if (window.notifyHeight) window.notifyHeight();
-  // Scroll en haut à chaque nouvelle question
+  // Scroll en haut à chaque nouvelle question (iframe + page parente)
   window.scrollTo(0, 0);
   try { document.documentElement.scrollTop = 0; document.body.scrollTop = 0; } catch(e) {}
+  try { window.parent.postMessage({ type: 'monestim-scroll-top' }, '*'); } catch(e) {}
 }
 
 function formatRangeVal(val, unit) {
@@ -3623,12 +3626,14 @@ function computeScores() {
   });
 
   // ── SCORE GLOBAL ─────────────────────────────────────────────────────
+  // NB : localisation réduite à 15% car le prix DVF encode déjà région/commune.
+  // L'inclure à 26% créait un double comptage partiel avec l'ancrage DVF.
   const global = Math.round(
-    scoreLocalisation * 0.26 +
-    scoreEtat         * 0.13 +
-    scoreFinitions    * 0.11 +
-    scoreEnergie      * 0.18 +
-    scoreStanding     * 0.12 +
+    scoreLocalisation * 0.15 +
+    scoreEtat         * 0.18 +
+    scoreFinitions    * 0.14 +
+    scoreEnergie      * 0.20 +
+    scoreStanding     * 0.13 +
     scoreMarche       * 0.11 +
     scoreCopro        * 0.05 +
     scoreJuridique    * 0.04
@@ -3709,7 +3714,7 @@ function _calculateScores() {
     return pMin + Math.max(0, Math.min(1, (c - vMin) / (vMax - vMin))) * (pMax - pMin);
   }
 
-  // ── LOCALISATION INTRA-VILLE — poids global 26% ──────────────────────
+  // ── LOCALISATION INTRA-VILLE — poids global 15% ──────────────────────
   // NB : Q0 (région), Q1 (type commune), Q2 (distance) sont EXCLUS du calcul de prix
   // car le prix DVF de la ville les encode déjà. Les inclure créerait un double comptage.
   // Seules les variables de MICRO-LOCALISATION (intra-ville) influencent le prix ici.
@@ -3725,7 +3730,7 @@ function _calculateScores() {
   // Plus serrée qu'avant car Q0/Q1/Q2 (amplitude macro) sont retirées
   const coefLoc = proj(gLoc, 0.85, 1.25, 0.88, 1.12);
 
-  // ── ÉTAT GÉNÉRAL — poids global 24% ──────────────────────────────────
+  // ── ÉTAT GÉNÉRAL — poids global 18% ──────────────────────────────────
   // NB : Q33 (toiture) et Q32 (combles) sont EXCLUS de gEtat dans le moteur prix.
   // Ils ont chacun un malus direct dédié (−10% toiture urgente, −5%/−3% combles).
   // Les inclure ici en plus créerait un double comptage : ils pénaliseraient
@@ -3755,7 +3760,7 @@ function _calculateScores() {
   // Plage réelle : −12% (tout vétuste) → +12% (tout rénové récemment)
   const coefFin = proj(gFin, 0.85, 1.18, 0.88, 1.12);
 
-  // ── ÉNERGIE & DPE — poids global 18% ────────────────────────────────
+  // ── ÉNERGIE & DPE — poids global 20% ────────────────────────────────
   // DPE : poids 0.45 — loi Climat 2021 (passoire = interdiction location + −15% observé marché)
   // C'est la seule variable avec un impact légal direct sur la valeur
   const gEner = geoPond([
@@ -3768,7 +3773,7 @@ function _calculateScores() {
   // Plage réelle : −20% (DPE G, fioul, aucune isolation) → +8% (DPE A, PAC, solaire)
   const coefEner = proj(gEner, 0.80, 1.18, 0.80, 1.08);
 
-  // ── STANDING & ATOUTS — poids global 12% ─────────────────────────────
+  // ── STANDING & ATOUTS — poids global 13% ─────────────────────────────
   // Piscine retirée de cette dimension — valeur fixe ajoutée après (voir ci-dessous)
   const gStand = geoPond([
     [getVal(49), 0.18], // luminosité — critère émotionnel fort
@@ -3930,6 +3935,8 @@ function _calculateScores() {
     vueAlert, vuePrimeTotal,
     piscineExtra,
     coefLoc, coefEtat, coefFin, coefEner, coefStand, coefMarch,
+    prixBand,
+    prixBandAppart: prices['appart'],
     ville: cityInput || 'France',
     typeBienLabel: ['Maison individuelle','Appartement','Maison mitoyenne','Loft / atypique'][typeBienIdx] || 'Bien immobilier',
     chambres: (() => { const q=questions[14]; return q?.options?.[answers[14]]?.label || '—'; })(),
@@ -3972,9 +3979,9 @@ function _renderResults() {
 
 function renderScoreBars(scores) {
   const categories = [
-    { label:"📍 Localisation",          score: scores.localisation, poids:"26%" },
-    { label:"🔧 État & Travaux",         score: scores.etat,         poids:"24%" },
-    { label:"⚡ Énergie & DPE",          score: scores.energie,      poids:"18%" },
+    { label:"📍 Localisation",          score: scores.localisation, poids:"15%" },
+    { label:"🔧 État & Travaux",         score: scores.etat,         poids:"18%" },
+    { label:"⚡ Énergie & DPE",          score: scores.energie,      poids:"20%" },
     { label:"✨ Standing & Finitions",   score: scores.standing,     poids:"12%" },
     { label:"📊 Marché local",           score: scores.marche,       poids:"11%" },
     { label:"🏢 Copropriété / Terrain",  score: scores.copro,        poids:"5%"  },
@@ -4735,7 +4742,7 @@ async function generatePDF() {
   ln(BX+PAD, p6y+PAD+9, BX+BW-PAD, p6y+PAD+9, [40,70,110], 0.3);
   const mLines = [
     'MonEstim est l\'un des rares outils grand public a combiner analyse hedoniste multi-dimensionnelle',
-    'et donnees transactionnelles officielles (DVF). Votre rapport repose sur 78 questions exhaustives,',
+    'et donnees transactionnelles officielles (DVF). Votre rapport repose sur 70 questions exhaustives,',
     'bien au-dela des 10 a 15 questions des outils classiques, couvrant chaque dimension qui influence',
     'reellement la valeur : localisation fine, etat technique, performance energetique, standing, marche',
     'local en temps reel, situation juridique et potentiel de valorisation personnalise.',
@@ -4762,7 +4769,7 @@ async function generatePDF() {
     { lbl:'DVF — DGFiP / data.gouv.fr',                desc:'Base nationale des ventes notariees (2020-2025) — open data officiel' },
     { lbl:'API Adresse — adresse.data.gouv.fr',         desc:'Geocodage commune, population et contexte geographique (BAN)' },
     { lbl:'Observatoires : FNAIM, Notaires de France',  desc:'Prix de reference au m2 par commune, departement et type de bien' },
-    { lbl:'Criteres declaratifs proprietaire (78 questions)', desc:'Analyse qualitative : technique, energetique, juridique, marche local' },
+    { lbl:'Criteres declaratifs proprietaire (70 questions)', desc:'Analyse qualitative : technique, energetique, juridique, marche local' },
   ];
   srcs.forEach((s2,i) => {
     const sy = p6y+PAD+14+i*9;
@@ -4955,7 +4962,7 @@ function restartQuiz() {
   const btnStart = document.getElementById('btn-start-quiz');
   btnStart.style.opacity = '0.4';
   btnStart.style.pointerEvents = 'none';
-  btnStart.textContent = 'Commencer les 78 questions →';
+  btnStart.textContent = 'Commencer les 70 questions →';
   document.getElementById('selected-offer-label').textContent = 'Sélectionnez une offre ci-dessus pour continuer';
   document.getElementById('selected-offer-label').style.color = 'var(--text-muted)';
   document.getElementById('progressWrap').style.display = 'none';
