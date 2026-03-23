@@ -586,21 +586,21 @@ async function generatePDF() {
   // Permet de diagnostiquer en test si les answers sont bien transmis
   console.log('[MonEstim Leviers] Réponses clés reçues :', {
     typeBien:   a[8],
-    jardin:     a[20],  // 0=arboré 1=entretenu 2=non aménagé 3=friche
-    DPE:        a[37],  // 0=A 1=B 2=C 3=D 4=E 5=F/G
-    chauffage:  a[38],  // 0=PAC 1=gaz 2=convec 3=fioul
-    facture:    a[42],  // 0=<800€ 1=800-1500€ 2=1500-2500€ 3=>2500€
-    cuisine:    a[29],  // 0=HG 1=fonct 2=moderniser 3=refaire
-    sdb:        a[30],  // 0=rénovée 1=ok 2=vieillit 3=vétuste
-    huisseries: a[31],  // 0=triple 1=double ok 2=double ancien 3=simple
-    sols:       a[27],  // 0=parquet 1=contre 2=stratifié 3=moquette
-    peintures:  a[28],  // 0=premium 1=ok 2=rafraîchir 3=mauvais
-    plomberie:  a[34],  // 0=récente 1=ok 2=vétuste 3=plomb
-    electricite:a[35],  // 0=normes 1=prob ok 2=partiel 3=ancien
-    toiture:    a[33],  // 0=récente 1=ok 2=travaux 3=urgent (maison)
-    combles:    a[32],  // 0=isolé récent 1=isolé 2=minimal 3=aucun (maison)
-    luminosite: a[49],  // 0=except 1=très lum 2=correct 3=sombre
-    immeuble:   a[43],  // 0=très bon 1=bon 2=moyen 3=dégradé (appart)
+    jardin:     a[21],  // 0=arboré 1=entretenu 2=non aménagé 3=friche
+    DPE:        a[38],  // 0=A 1=B 2=C 3=D 4=E 5=F/G
+    chauffage:  a[39],  // 0=PAC 1=gaz 2=convec 3=fioul
+    facture:    a[43],  // 0=<800€ 1=800-1500€ 2=1500-2500€ 3=>2500€
+    cuisine:    a[30],  // 0=HG 1=fonct 2=moderniser 3=refaire
+    sdb:        a[31],  // 0=rénovée 1=ok 2=vieillit 3=vétuste
+    huisseries: a[32],  // 0=triple 1=double ok 2=double ancien 3=simple
+    sols:       a[28],  // 0=parquet 1=contre 2=stratifié 3=moquette
+    peintures:  a[29],  // 0=premium 1=ok 2=rafraîchir 3=mauvais
+    plomberie:  a[35],  // 0=récente 1=ok 2=vétuste 3=plomb
+    electricite:a[36],  // 0=normes 1=prob ok 2=partiel 3=ancien
+    toiture:    a[34],  // 0=récente 1=ok 2=travaux 3=urgent (maison)
+    combles:    a[33],  // 0=isolé récent 1=isolé 2=minimal 3=aucun (maison)
+    luminosite: a[50],  // 0=except 1=très lum 2=correct 3=sombre
+    immeuble:   a[44],  // 0=très bon 1=bon 2=moyen 3=dégradé (appart)
   });
 
 
@@ -608,68 +608,68 @@ async function generatePDF() {
   function rep(qi) { var v = a[qi]; return (v !== null && v !== undefined) ? v : -1; }
 
   // ── Terrain & extérieurs ──────────────────────────────────
-  var jardinFriche      = rep(20) === 3;
-  var jardinNonAmenage  = rep(20) >= 2;       // non aménagé (2) ou friche (3) → levier actif
-  var jardinOK          = rep(20) >= 0 && rep(20) <= 1;
+  var jardinFriche      = rep(21) === 3;
+  var jardinNonAmenage  = rep(21) >= 2;       // non aménagé (2) ou friche (3) → levier actif
+  var jardinOK          = rep(21) >= 0 && rep(21) <= 1;
 
   // ── État général & travaux ────────────────────────────────
-  var solMauvais        = rep(27) === 3;
-  var solPassable       = rep(27) >= 2;
-  var solOK             = rep(27) >= 0 && rep(27) <= 1;
-  var peinturesARafr    = rep(28) === 2;
-  var peinturesMauv     = rep(28) === 3;
-  var peinturesVetustes = rep(28) >= 2;
-  var peinturesOK       = rep(28) >= 0 && rep(28) <= 1;
-  var cuisineAModern    = rep(29) === 2;
-  var cuisineARefaire   = rep(29) === 3;
-  var cuisineAncienne   = rep(29) >= 2;
-  var cuisineOK         = rep(29) >= 0 && rep(29) <= 1;
-  var sdbVieillissante  = rep(30) === 2;
-  var sdbVetuste        = rep(30) === 3;
-  var sdbMauvaise       = rep(30) >= 2;
-  var sdbOK             = rep(30) >= 0 && rep(30) <= 1;
-  var simpleVitrage     = rep(31) === 3;
-  var doubleAncien      = rep(31) === 2;
-  var huissMauv         = rep(31) >= 2;
-  var huissOK           = rep(31) >= 0 && rep(31) <= 1;
-  var comblesAucun      = rep(32) === 3;
-  var comblesMinimal    = rep(32) === 2;
-  var comblesMalIsoles  = rep(32) >= 2;
-  var comblesOK         = rep(32) >= 0 && rep(32) <= 1;
-  var toitureUrgente    = rep(33) === 3;
-  var toitureTravaux    = rep(33) === 2;
-  var toitureMauvaise   = rep(33) >= 2;
-  var toitureOK         = rep(33) >= 0 && rep(33) <= 1;
-  var plombMauv         = rep(34) >= 2;
-  var plombUrgent       = rep(34) === 3;
-  var elecNonConf       = rep(35) >= 2;
-  var elecUrgent        = rep(35) === 3;
-  var elecOK            = rep(35) >= 0 && rep(35) <= 1;
+  var solMauvais        = rep(28) === 3;
+  var solPassable       = rep(28) >= 2;
+  var solOK             = rep(28) >= 0 && rep(28) <= 1;
+  var peinturesARafr    = rep(29) === 2;
+  var peinturesMauv     = rep(29) === 3;
+  var peinturesVetustes = rep(29) >= 2;
+  var peinturesOK       = rep(29) >= 0 && rep(29) <= 1;
+  var cuisineAModern    = rep(30) === 2;
+  var cuisineARefaire   = rep(30) === 3;
+  var cuisineAncienne   = rep(30) >= 2;
+  var cuisineOK         = rep(30) >= 0 && rep(30) <= 1;
+  var sdbVieillissante  = rep(31) === 2;
+  var sdbVetuste        = rep(31) === 3;
+  var sdbMauvaise       = rep(31) >= 2;
+  var sdbOK             = rep(31) >= 0 && rep(31) <= 1;
+  var simpleVitrage     = rep(32) === 3;
+  var doubleAncien      = rep(32) === 2;
+  var huissMauv         = rep(32) >= 2;
+  var huissOK           = rep(32) >= 0 && rep(32) <= 1;
+  var comblesAucun      = rep(33) === 3;
+  var comblesMinimal    = rep(33) === 2;
+  var comblesMalIsoles  = rep(33) >= 2;
+  var comblesOK         = rep(33) >= 0 && rep(33) <= 1;
+  var toitureUrgente    = rep(34) === 3;
+  var toitureTravaux    = rep(34) === 2;
+  var toitureMauvaise   = rep(34) >= 2;
+  var toitureOK         = rep(34) >= 0 && rep(34) <= 1;
+  var plombMauv         = rep(35) >= 2;
+  var plombUrgent       = rep(35) === 3;
+  var elecNonConf       = rep(36) >= 2;
+  var elecUrgent        = rep(36) === 3;
+  var elecOK            = rep(36) >= 0 && rep(36) <= 1;
 
   // ── Énergie ───────────────────────────────────────────────
-  var dpeA_C            = rep(37) >= 0 && rep(37) <= 2;
-  var dpeD              = rep(37) === 3;
-  var dpeE              = rep(37) === 4;
-  var dpeFG             = rep(37) === 5;
-  var dpePassable       = rep(37) >= 3;
-  var dpeMauvais        = rep(37) >= 4;
-  var chauffConvec      = rep(38) === 2;
-  var chauffFioul       = rep(38) === 3;
-  var chauffMauvais     = rep(38) >= 2;
-  var chauffOK          = rep(38) >= 0 && rep(38) <= 1;
-  var confortEteNul     = rep(41) === 3;
-  var factureLourde     = rep(42) >= 2;
-  var factureOK         = rep(42) >= 0 && rep(42) <= 1;
+  var dpeA_C            = rep(38) >= 0 && rep(38) <= 2;
+  var dpeD              = rep(38) === 3;
+  var dpeE              = rep(38) === 4;
+  var dpeFG             = rep(38) === 5;
+  var dpePassable       = rep(38) >= 3;
+  var dpeMauvais        = rep(38) >= 4;
+  var chauffConvec      = rep(39) === 2;
+  var chauffFioul       = rep(39) === 3;
+  var chauffMauvais     = rep(39) >= 2;
+  var chauffOK          = rep(39) >= 0 && rep(39) <= 1;
+  var confortEteNul     = rep(42) === 3;
+  var factureLourde     = rep(43) >= 2;
+  var factureOK         = rep(43) >= 0 && rep(43) <= 1;
 
   // ── Copropriété (appartement) ─────────────────────────────
-  var immeubleDegrade   = rep(43) >= 2;
-  var travauxCopro      = rep(45) >= 2;
+  var immeubleDegrade   = rep(44) >= 2;
+  var travauxCopro      = rep(46) >= 2;
 
   // ── Standing & finitions ──────────────────────────────────
   var finitionsBasses   = a[48] >= 2;       // standard ou bas coût
   var finitionsOK       = a[48] <= 1;       // haut gamme ou bon standing
-  var bienSombre        = rep(49) === 3;      // sombre (nord, vis-à-vis)
-  var rangementNul      = rep(51) >= 3;       // aucun rangement intégré (Q51)
+  var bienSombre        = rep(50) === 3;      // sombre (nord, vis-à-vis)
+  var rangementNul      = rep(52) >= 3;       // aucun rangement intégré (Q51)
 
   // ── Poids de priorité pour tri ──
   var poids = { Critique:0, Excellent:1, 'Tres bon':2, Bon:3 };
@@ -849,12 +849,12 @@ async function generatePDF() {
     // ETAT IMMEUBLE COPROPRIETE (appartement seulement — Q43)
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     {
-      prio:  a[42] === 3 ? 'Excellent' : 'Tres bon',
-      titre: a[42] === 3 ? 'Immeuble degrade — frein a la vente' : 'Etat de l\'immeuble — a surveiller',
-      gain:  a[42] === 3 ? '+3 a +6%' : '+1 a +3%',
+      prio:  a[43] === 3 ? 'Excellent' : 'Tres bon',
+      titre: a[43] === 3 ? 'Immeuble degrade — frein a la vente' : 'Etat de l\'immeuble — a surveiller',
+      gain:  a[43] === 3 ? '+3 a +6%' : '+1 a +3%',
       cout:  'Variable (quote-part syndic)',
       roi:   'Tres bon',
-      desc:  a[42] === 3
+      desc:  a[43] === 3
         ? 'Immeuble degrade identifie avec travaux importants votes ou a venir. Les acheteurs et les banques penalisent fortement ce point. Participation active au syndic pour accelérer les travaux avant la mise en vente.'
         : 'Etat moyen de l\'immeuble detecte. Des travaux de facade ou de parties communes a venir peuvent peser sur le prix de vente. Bien anticiper et communiquer sur les charges previsionnelles aux acheteurs.',
       cond: isAppart && immeubleDegrade
