@@ -1152,9 +1152,15 @@ async function generatePDF() {
 
   // Positionnement MonEstim dans la distribution
   liqY += 3;
-  var posSegment = baseM2 <= prixBas  ? 'segment marche bas' :
-                   baseM2 <= prixMed  ? 'segment median' :
-                   baseM2 <= prixHaut ? 'segment haut' : 'au-dessus du marche haut';
+  // Positionnement basé sur le score — calibré sur l'amplitude réelle [22–90]
+  // Q1=39, Q2=56, Q3=73 → 4 segments de taille égale sur la vraie amplitude
+  // Seuils calibrés sur amplitude réelle [15–96] après intégration 30 nouvelles questions
+  // Quartiles : Q1=35, Q2=56, Q3=76
+  var scoreGlob = s && s.global ? s.global : 50;
+  var posSegment = scoreGlob >= 76 ? 'bien d\'exception — segment haut' :
+                   scoreGlob >= 56 ? 'marche premium — qualite justifiee' :
+                   scoreGlob >= 35 ? 'segment median — rapport qualite/prix equilibre' :
+                                     'segment standard — travaux a prevoir';
   rr(14, liqY, W-28, 16, 1, [16,24,16], [72,200,130,0.3], 0.5);
   box(14, liqY, 3, 16, GREEN, null);
   t('MonEstim positionne votre bien : ' + posSegment, 22, liqY+6.5, 7.5, 'bold', TEXT);

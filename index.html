@@ -2281,7 +2281,7 @@ const questions = [
     {icon:"🏗️",label:"Rénovation complète du bien (> 50k€)", val:1.15},
     {icon:"🔨",label:"Travaux importants ciblés (20k-50k€)", val:1.08},
     {icon:"🪛",label:"Petits travaux d'entretien et de rafraîchissement", val:1.02},
-    {icon:"❌",label:"Aucun travaux récents", val:1.0}
+    {icon:"❌",label:"Aucun travaux récents", val:0.88}
   ]},
 
   // ── ⚡ ÉNERGIE & DPE (Q36–Q42) ──────────────────────────
@@ -2490,17 +2490,17 @@ const questions = [
 
   // ── 📊 MARCHÉ & CONTEXTE (Q65–Q70) ──────────────────────
   { section:"📊 Marché & Contexte", text:"Comment évaluez-vous la tension du marché local actuellement ?", hint:"Regardez le délai de vente moyen dans votre secteur sur les portails immobiliers.", type:"options", cols:2, options:[
-    {icon:"🔥",label:"Très tendu — les biens partent en moins de 3 semaines", val:1.2},
-    {icon:"📈",label:"Actif — biens vendus en 1 à 3 mois", val:1.08},
+    {icon:"🔥",label:"Très tendu — les biens partent en moins de 3 semaines", val:1.07},
+    {icon:"📈",label:"Actif — biens vendus en 1 à 3 mois", val:1.04},
     {icon:"😐",label:"Équilibré — délai de 3 à 6 mois", val:1.0},
-    {icon:"📉",label:"Marché lent — certains biens en vente depuis plus de 6 mois", val:0.88}
+    {icon:"📉",label:"Marché lent — certains biens en vente depuis plus de 6 mois", val:0.95}
   ]},
 
   { section:"📊 Marché & Contexte", text:"Le secteur est-il en développement ou déclin ?", hint:"Nouvelles lignes de transport, projets d'urbanisme, nouvelles entreprises ou au contraire fermetures.", type:"options", cols:2, options:[
-    {icon:"🚀",label:"Fort développement — projets d'infrastructure, attractivité croissante", val:1.15},
+    {icon:"🚀",label:"Fort développement — projets d'infrastructure, attractivité croissante", val:1.08},
     {icon:"📈",label:"Développement modéré — territoire qui se dynamise", val:1.06},
     {icon:"😐",label:"Stable — pas de changement notable à venir", val:1.0},
-    {icon:"📉",label:"Déclin — désertification, fermetures, population en baisse", val:0.85}
+    {icon:"📉",label:"Déclin — désertification, fermetures, population en baisse", val:0.93}
   ]},
 
   { section:"📊 Marché & Contexte", text:"Le bien a-t-il un fort potentiel locatif ?", hint:"Rentabilité brute > 5% dans votre ville ? Demande locative tendue ? Fort pour investisseur.", type:"options", cols:2, options:[
@@ -2708,7 +2708,7 @@ function getSectionCard(sectionName) {
   const typeLabels = ['Maison individuelle','Appartement','Maison mitoyenne','Loft / atypique'];
   const typeLabel  = typeIdx !== null ? typeLabels[typeIdx] : null;
 
-  const chambresIdx = answers[11]; // after loft questions (offset may vary)
+  const chambresIdx = answers[14]; // Q14 = nombre de chambres
   const chambresVals= [1,2,3,4,5,6];
 
   // Helper: score → tier label
@@ -3589,42 +3589,59 @@ function computeScores() {
   }
 
   // ── LOCALISATION — mêmes paires que gLoc dans _calculateScores ──────
+  // Q00 région retirée : double comptage avec l'ancrage DVF commune (prix déjà régionalisés)
+  // Q01 type commune devient le critère principal de localisation
+  // Q00 région, Q01 type commune, Q02 distance retirées (double comptage DVF)
   const gLoc = geoPond([
-    [getVal(0),  0.28], [getVal(1),  0.18], [getVal(3),  0.22],
-    [getVal(2),  0.12], [getVal(6),  0.08], [getVal(4),  0.06],
-    [getVal(5),  0.04], [getVal(7),  0.02],
+    [getVal(3),  0.380], // quartier
+    [getVal(4),  0.220], // transports
+    [getVal(5),  0.150], // commerces
+    [getVal(6),  0.120], // vue
+    [getVal(7),  0.060], // risques
+    [getVal(57), 0.050], // voisinage
+    [getVal(12), 0.020], // accessibilité atypique
   ]);
   const scoreLocalisation = coefToScore(gLoc, 0.80, 1.22);
 
   // ── ÉTAT — mêmes paires que gEtat ───────────────────────────────────
   const gEtat = geoPond([
-    [getVal(27), 0.35], [getVal(34), 0.20], [getVal(35), 0.12],
-    [getVal(36), 0.10], [getVal(33), 0.08], [getVal(37), 0.10],
-    [getVal(26), 0.05],
+    [getVal(27), 0.341], // état général — critère principal
+    [getVal(37), 0.250], // travaux récents — renforcé (différencie neuf/rénové vs dégradé)
+    [getVal(35), 0.128], // plomberie
+    [getVal(36), 0.102], // électricité
+    [getVal(26), 0.068], // année construction
+    [getVal(34), 0.068], // toiture
+    [getVal(33), 0.043], // combles
   ]);
   const scoreEtat = coefToScore(gEtat, 0.65, 1.15);
 
   // ── FINITIONS — mêmes paires que gFin ───────────────────────────────
   const gFin = geoPond([
-    [getVal(30), 0.25], [getVal(31), 0.25], [getVal(28), 0.15],
-    [getVal(29), 0.15], [getVal(32), 0.10], [getVal(37), 0.10],
+    [getVal(30), 0.22], [getVal(31), 0.22], [getVal(28), 0.13],
+    [getVal(29), 0.13], [getVal(32), 0.09], [getVal(37), 0.09],
+    [getVal(49), 0.05], [getVal(10), 0.04], [getVal(11), 0.03],  // +matériaux, HSP atypique, éléments archi
   ]);
   const scoreFinitions = coefToScore(gFin, 0.87, 1.15);
 
   // ── ÉNERGIE — mêmes paires que gEner ────────────────────────────────
   const gEner = geoPond([
-    [getVal(38), 0.45], [getVal(39), 0.20], [getVal(43), 0.15],
-    [getVal(42), 0.12], [getVal(41), 0.08],
+    [getVal(38), 0.42], [getVal(39), 0.19], [getVal(43), 0.14],
+    [getVal(42), 0.11], [getVal(41), 0.08], [getVal(40), 0.06],  // +chauffage appoint
   ]);
   const scoreEnergie = coefToScore(gEner, 0.83, 1.15);
 
   // ── STANDING — mêmes paires que gStand ──────────────────────────────
   // Q52=cachet archi(0.10), Q54=nuisances sonores(0.08), Q53=domotique(0.04)
   const gStand = geoPond([
-    [getVal(50), 0.18], [getVal(50), 0.16], [getVal(25), 0.12],
-    [getVal(21), 0.10], [getVal(23), 0.08], [getVal(53), 0.10],
-    [getVal(52), 0.07], [getVal(74), 0.08], [getVal(55), 0.08],
-    [getVal(54), 0.03],
+    // Confort & atouts principaux
+    [getVal(50), 0.12], [getVal(25), 0.06], [getVal(21), 0.05], [getVal(23), 0.04],
+    [getVal(53), 0.05], [getVal(52), 0.04], [getVal(74), 0.04], [getVal(55), 0.04], [getVal(54), 0.02],
+    // Structure & configuration du bien
+    [getVal(14), 0.05], [getVal(15), 0.04], [getVal(16), 0.04], [getVal(17), 0.05],
+    [getVal(18), 0.04], [getVal(19), 0.03], [getVal(20), 0.03],
+    // Équipements & services
+    [getVal(51), 0.04], [getVal(48), 0.03], [getVal(58), 0.03], [getVal(59), 0.03],
+    [getVal(56), 0.03], [getVal(71), 0.04], [getVal(72), 0.02], [getVal(73), 0.04],
   ]);
   const scoreStanding = coefToScore(gStand, 0.88, 1.12);
 
@@ -3638,17 +3655,16 @@ function computeScores() {
   // ── COPROPRIÉTÉ / TERRAIN — moyenne pondérée classique ───────────────
   // (pas de coef prix dédié — conservé pour les barres et les leviers)
   const scoreCopro = avgScoreWeighted({
-    19:0.20, 20:0.18, 21:0.12,
-    23:0.08, 24:0.08, 70:0.04,
-    43:0.30, 45:0.22, 44:0.18,
-    46:0.06, 47:0.04,
-    17:0.08, 18:0.04, 22:0.10,
+    // Appartement — état et charges
+    44:0.35, 46:0.20, 45:0.18, 47:0.10, 48:0.07,
+    // Terrain / maison (ignorés automatiquement si non visibles)
+    20:0.05, 22:0.05,
   });
 
   // ── JURIDIQUE — moyenne pondérée classique ────────────────────────────
   const scoreJuridique = avgScoreWeighted({
-    60:0.30, 64:0.25, 59:0.20,
-    63:0.10, 61:0.08, 62:0.07,
+    61:0.28, 60:0.20, 63:0.12, 65:0.12,
+    62:0.10, 64:0.09, 22:0.05, 59:0.04,
   });
 
   // ── SCORE GLOBAL ─────────────────────────────────────────────────────
@@ -3746,11 +3762,13 @@ function _calculateScores() {
   // Seules les variables de MICRO-LOCALISATION (intra-ville) influencent le prix ici.
   // Q0/Q1/Q2 restent dans le scoreLocalisation (barres PDF) — pas dans le prix.
   const gLoc = geoPond([
-    [getVal(3),  0.524], // réputation quartier — driver principal intra-ville
-    [getVal(6),  0.190], // vue / environnement immédiat
-    [getVal(4),  0.143], // transports en commun / accessibilité
-    [getVal(5),  0.095], // commerces / services de proximité
-    [getVal(7),  0.048], // risques naturels (inondation, glissement…)
+    [getVal(3),  0.380], // quartier — critère micro-localisation principal
+    [getVal(4),  0.220], // transports
+    [getVal(5),  0.150], // commerces
+    [getVal(6),  0.120], // vue / environnement
+    [getVal(7),  0.060], // risques
+    [getVal(57), 0.050], // voisinage
+    [getVal(12), 0.020], // accessibilité atypique
   ]);
   // Plage réelle intra-ville : −12% (quartier sensible / risques) → +12% (quartier premium)
   // Plus serrée qu'avant car Q0/Q1/Q2 (amplitude macro) sont retirées
@@ -3763,11 +3781,13 @@ function _calculateScores() {
   // à la fois via gEtat→coefEtat ET via leur malus propre.
   // Q33 et Q32 restent dans scoreEtat (barres PDF) — pas dans le calcul de prix.
   const gEtat = geoPond([
-    [getVal(27), 0.45], // état général global (Q26) — vision acheteur (poids renforcé)
-    [getVal(35), 0.15], // plomberie (Q34)
-    [getVal(36), 0.12], // électricité (Q35)
-    [getVal(37), 0.18], // travaux importants réalisés récemment (Q36)
-    [getVal(26), 0.10], // année construction (Q25)
+    [getVal(27), 0.341], // état général — critère principal
+    [getVal(37), 0.250], // travaux récents — renforcé (neuf/rénové vs dégradé)
+    [getVal(35), 0.128], // plomberie
+    [getVal(36), 0.102], // électricité
+    [getVal(26), 0.068], // année construction
+    [getVal(34), 0.068], // toiture
+    [getVal(33), 0.043], // combles
   ]);
   // Plage calibrée sur l'amplitude réelle de gEtat sans Q33/Q32 : 0.75 → 1.15
   // −22% (structurellement dégradé, vieux, aucun travaux) → +16% (tout refait neuf)
@@ -3776,12 +3796,15 @@ function _calculateScores() {
   // ── FINITIONS INTÉRIEURES — poids global 14% ─────────────────────────
   // Cuisine et SDB : critères #1 et #2 dans la décision d'achat
   const gFin = geoPond([
-    [getVal(30), 0.25], // cuisine (Q29) — critère n°2 acheteurs
-    [getVal(31), 0.25], // SDB état (Q30) — critère n°1 acheteurs
-    [getVal(28), 0.15], // sols (Q27)
-    [getVal(29), 0.15], // murs / peintures (Q28)
-    [getVal(32), 0.10], // huisseries (Q31) — double→simple ≈ 2% réel
-    [getVal(37), 0.10], // travaux récents visibles (Q36)
+    [getVal(30), 0.22], // cuisine — critère n°2 acheteurs
+    [getVal(31), 0.22], // SDB — critère n°1 acheteurs
+    [getVal(28), 0.13], // sols
+    [getVal(29), 0.13], // murs / peintures
+    [getVal(32), 0.09], // huisseries
+    [getVal(37), 0.09], // travaux récents visibles
+    [getVal(49), 0.05], // qualité matériaux
+    [getVal(10), 0.04], // HSP atypique
+    [getVal(11), 0.03], // éléments architecturaux
   ]);
   // Plage réelle : −12% (tout vétuste) → +12% (tout rénové récemment)
   const coefFin = proj(gFin, 0.85, 1.18, 0.88, 1.12);
@@ -3790,11 +3813,12 @@ function _calculateScores() {
   // DPE : poids 0.45 — loi Climat 2021 (passoire = interdiction location + −15% observé marché)
   // C'est la seule variable avec un impact légal direct sur la valeur
   const gEner = geoPond([
-    [getVal(38), 0.45], // DPE (Q37) — poids dominant (effet légal + coût rénovation)
-    [getVal(39), 0.20], // type de chauffage (Q38)
-    [getVal(43), 0.15], // facture annuelle réelle (Q42)
-    [getVal(42), 0.12], // confort thermique été (Q41)
-    [getVal(41), 0.08], // production renouvelable (Q40)
+    [getVal(38), 0.42], // DPE — poids dominant
+    [getVal(39), 0.19], // type de chauffage
+    [getVal(43), 0.14], // facture annuelle
+    [getVal(42), 0.11], // confort thermique été
+    [getVal(41), 0.08], // production renouvelable
+    [getVal(40), 0.06], // chauffage appoint
   ]);
   // Plage réelle : −20% (DPE G, fioul, aucune isolation) → +8% (DPE A, PAC, solaire)
   const coefEner = proj(gEner, 0.80, 1.18, 0.80, 1.08);
@@ -3802,16 +3826,33 @@ function _calculateScores() {
   // ── STANDING & ATOUTS — poids global 13% ─────────────────────────────
   // Piscine retirée de cette dimension — valeur fixe ajoutée après (voir ci-dessous)
   const gStand = geoPond([
-    [getVal(50), 0.18], // luminosité — critère émotionnel fort
-    [getVal(50), 0.16], // hauteur sous plafond
-    [getVal(25), 0.12], // garage / parking
-    [getVal(21), 0.10], // état jardin
-    [getVal(23), 0.08], // terrasse / balcon
-    [getVal(53), 0.10], // cachet architectural (Q52)
-    [getVal(52), 0.07], // rangements
-    [getVal(74), 0.08], // exposition solaire
-    [getVal(55), 0.08], // nuisances sonores (Q54) — fort impact
-    [getVal(54), 0.03], // domotique (Q53) — secondaire
+    // Confort & atouts principaux
+    [getVal(50), 0.12], // luminosité
+    [getVal(25), 0.06], // garage / parking
+    [getVal(21), 0.05], // jardin
+    [getVal(23), 0.04], // terrasse / balcon
+    [getVal(53), 0.05], // cachet architectural
+    [getVal(52), 0.04], // rangements
+    [getVal(74), 0.04], // exposition solaire
+    [getVal(55), 0.04], // nuisances sonores
+    [getVal(54), 0.02], // domotique
+    // Structure & configuration
+    [getVal(14), 0.05], // chambres
+    [getVal(15), 0.04], // SDB count
+    [getVal(16), 0.04], // niveaux
+    [getVal(17), 0.05], // mitoyenneté
+    [getVal(18), 0.04], // étage appart
+    [getVal(19), 0.03], // ascenseur
+    [getVal(20), 0.03], // surface terrain
+    // Équipements & services
+    [getVal(51), 0.04], // HSP
+    [getVal(48), 0.03], // services résidence
+    [getVal(58), 0.03], // fibre
+    [getVal(59), 0.03], // cave
+    [getVal(56), 0.03], // nuisances olfactives
+    [getVal(71), 0.04], // dépendance
+    [getVal(72), 0.02], // home cinéma
+    [getVal(73), 0.04], // bureau
   ]);
   // Plage réelle : −10% (aucun atout, sombre) → +15% (piscine + garage + cachet + lumineux)
   const coefStand = proj(gStand, 0.87, 1.18, 0.90, 1.15);
@@ -3820,8 +3861,8 @@ function _calculateScores() {
   const gMarch = geoPond([
     [getVal(66), 0.40], // tension du marché local
     [getVal(67), 0.30], // dynamique dev / déclin secteur
-    [getVal(68), 0.15], // potentiel locatif
-    [getVal(70), 0.15], // nuisances / projets urbanisme futurs
+    [getVal(68), 0.20], // potentiel locatif
+    [getVal(70), 0.10], // nuisances / projets urbanisme futurs
   ]);
   const coefMarch = proj(gMarch, 0.82, 1.20, 0.93, 1.07);
 
@@ -3918,7 +3959,7 @@ function _calculateScores() {
   );
 
 
-  const urgenceIdx   = answers[77] ?? 2;
+  const urgenceIdx   = answers[76] ?? 2;
   const urgenceCoefs = [0.94, 0.97, 1.0, 1.02];
   const urgenceCoef  = urgenceCoefs[urgenceIdx] ?? 1.0;
   const urgenceLabels = [
@@ -3967,7 +4008,7 @@ function _calculateScores() {
     typeBienLabel: ['Maison individuelle','Appartement','Maison mitoyenne','Loft / atypique'][typeBienIdx] || 'Bien immobilier',
     chambres: (() => { const q=questions[14]; return q?.options?.[answers[14]]?.label || '—'; })(),
     annee:    (() => { const fourchettes = ['< 1950','1950-1980','1980-2000','2000-2015','2015-2022','2023+']; const idx = answers[26]; return (idx !== null && idx !== undefined) ? fourchettes[idx] || '—' : '—'; })(),
-    dpe:      (() => { const q=questions[38]; return q?.options?.[answers[39]]?.label?.[0] || '—'; })(),
+    dpe:      (() => { const q=questions[38]; return q?.options?.[answers[38]]?.label?.[0] || '—'; })(),
   };
   return { scores, priceLabel, finalPriceM2, totalValue, low, high, plusVal, delai };
 }
