@@ -720,7 +720,16 @@ async function generatePDF() {
         : (dpeE
           ? 'DPE E identifie. Les acheteurs sont de plus en plus sensibles au classement energetique. Travaux d\'isolation ou changement de chauffage pour atteindre D ou C : prime de 3 a 7% sur le prix.'
           : 'DPE D ameliorable. Pompe a chaleur ou isolation renforcee pour passer en classe C : prime de 2 a 4% et argument commercial fort face a des acheteurs attentifs a la facture.'),
-      cond: dpePassable || chauffMauvais || factureLourde
+      cond: dpePassable || chauffMauvais
+    },
+    {
+      prio:  'Bon',
+      titre: 'Facture energetique elevee — optimisation possible',
+      gain:  '+1 a +3%',
+      cout:  '2 000 - 8 000 EUR',
+      roi:   'Bon',
+      desc:  'Votre facture annuelle depasse 1 500 EUR. Meme avec un bon DPE, une facture elevee est un signal negatif pour les acheteurs. Isolation complementaire, regulation de chauffage ou VMC : des travaux cibles peuvent reduire la facture et valoriser le bien de 1 a 3%.',
+      cond: factureLourde && !dpePassable && !chauffMauvais
     },
 
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
