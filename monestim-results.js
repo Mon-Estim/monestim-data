@@ -70,7 +70,7 @@ function scoreColor(score) {
 }
 function scoreLabel(score) {
   if (score >= 80) return 'Excellent';
-  if (score >= 70) return 'Très bon';
+  if (score >= 65) return 'Très bon';
   if (score >= 60) return 'Bon';
   if (score >= 50) return 'Moyen';
   return 'À améliorer';
@@ -266,7 +266,7 @@ async function generatePDF() {
   const scoreLbl = (v) => {
     v = Number(v)||0;
     if(v>=80) return 'Excellent';
-    if(v>=65) return 'Tres bon';
+    if(v>=65) return 'Très bon';
     if(v>=50) return 'Moyen';
     return 'A ameliorer';
   };
@@ -368,7 +368,7 @@ async function generatePDF() {
     const decoteMontant = Math.round(safeNum(p.totalValue) / (1 - safeNum(p.toitureMalus,0)) * safeNum(p.toitureMalus,0) / 1000) * 1000;
     rr(14, _alertY, W-28, 12, 1, [40,20,14], [220,80,50,0.25], 0.8);
     box(14, _alertY, 2, 12, ORANGE, null);
-    t('⚠ DECOTE APPLIQUEE — ' + ta.label.toUpperCase(), 20, _alertY+5, 6.5, 'bold', ORANGE);
+    t('!! DECOTE APPLIQUEE — ' + ta.label.toUpperCase(), 20, _alertY+5, 6.5, 'bold', ORANGE);
     t('-10% soit -'+fmt(decoteMontant)+' EUR integres dans l\'estimation', 20, _alertY+10.5, 5.5, 'normal', TEXT2);
     _alertY += 14;
   }
@@ -379,7 +379,7 @@ async function generatePDF() {
     const decoteC = Math.round(safeNum(p.totalValue) / (1 - safeNum(p.comblesMalus,0)) * safeNum(p.comblesMalus,0) / 1000) * 1000;
     rr(14, _alertY, W-28, 12, 1, [30,28,14], [220,160,50,0.2], 0.8);
     box(14, _alertY, 2, 12, GOLD, null);
-    t('⚠ DECOTE APPLIQUEE — ' + ca.label.toUpperCase(), 20, _alertY+5, 6.5, 'bold', GOLD);
+    t('!! DECOTE APPLIQUEE — ' + ca.label.toUpperCase(), 20, _alertY+5, 6.5, 'bold', GOLD);
     t('-'+ca.pct+'% soit -'+fmt(decoteC)+' EUR — isolation eligible a 1 EUR (MaPrimeRenov\')', 20, _alertY+10.5, 5.5, 'normal', TEXT2);
     _alertY += 14;
   }
@@ -393,7 +393,7 @@ async function generatePDF() {
     const valVue = Math.round(safeNum(p.totalValue) / (1 + safeNum(p.vuePrimeTotal||0)) * safeNum(p.vuePrimeTotal||0) / 1000) * 1000;
     rr(14, _alertY, W-28, 12, 1, bgVue, bdVue, 0.8);
     box(14, _alertY, 2, 12, colVue, null);
-    t('✦ PRIME DECLAREE — ' + p.vueAlert.label.toUpperCase(), 20, _alertY+5, 6.5, 'bold', colVue);
+    t('* PRIME DECLAREE — ' + p.vueAlert.label.toUpperCase(), 20, _alertY+5, 6.5, 'bold', colVue);
     t('+'+p.vueAlert.pct+'% soit +'+fmt(valVue)+' EUR integres — '+p.vueAlert.detail, 20, _alertY+10.5, 5.5, 'normal', TEXT2);
     _alertY += 14;
   }
@@ -404,7 +404,7 @@ async function generatePDF() {
     rr(14, _alertY, W-28, 12, 1, [14,28,22], [50,200,130,0.18], 0.8);
     box(14, _alertY, 2, 12, GREEN, null);
     const _piscLbl = piscineExtra === 10000 ? 'PISCINE CREUSEE ET CHAUFFEE' : 'PISCINE HORS SOL / SPA PROFESSIONNEL';
-    t('✦ PLUS-VALUE INCLUSE — ' + _piscLbl, 20, _alertY+5, 6.5, 'bold', GREEN);
+    t('+  PLUS-VALUE INCLUSE — ' + _piscLbl, 20, _alertY+5, 6.5, 'bold', GREEN);
     t('+'+fmt(piscineExtra)+' EUR integres dans l\'estimation (valeur fixe marche)', 20, _alertY+10.5, 5.5, 'normal', TEXT2);
     _alertY += 14;
   }
@@ -467,8 +467,8 @@ async function generatePDF() {
     { key:'energie',      label:'Énergie & DPE',       icon:'⚡', poids:'20%' },
     { key:'standing',     label:'Standing & Atouts',   icon:'🏠', poids:'13%' },
     { key:'marche',       label:'Marché local',        icon:'📊', poids:'11%' },
-    { key:'copro',        label:'Copro / Terrain',     icon:'🌳', poids:'8%'  },
-    { key:'juridique',    label:'Juridique & Fiscal',  icon:'⚖️', poids:'5%'  },
+    { key:'copro',        label:'Copro / Terrain',     icon:'🌳', poids:'5%'  },
+    { key:'juridique',    label:'Juridique & Fiscal',  icon:'⚖️', poids:'4%'  },
   ];
 
   let d7y = 28;
@@ -542,7 +542,7 @@ async function generatePDF() {
   rr(14,37,W-28,12,1,[20,30,20],[72,200,130],0.4);
   t('POTENTIEL DE PLUS-VALUE TOTAL',16,43,7,'bold',GREEN);
   t(p.plusVal||'+0%',W-16,43,12,'bold',GREEN,'right');
-  t('En realisant les travaux prioritaires identifies ci-dessous',16,48,6.5,'normal',TEXT3);
+  t('En réalisant les travaux prioritaires identifiés ci-dessous',16,48,6.5,'normal',TEXT3);
 
   // Leviers
   // ═══════════════════════════════════════════════════════════════
@@ -672,7 +672,7 @@ async function generatePDF() {
   var rangementNul      = rep(52) >= 3;       // aucun rangement intégré (Q51)
 
   // ── Poids de priorité pour tri ──
-  var poids = { Critique:0, Excellent:1, 'Tres bon':2, Bon:3 };
+  var poids = { Critique:0, Excellent:1, 'Très bon':2, Bon:3 };
 
   var leviersAll = [
 
@@ -710,7 +710,7 @@ async function generatePDF() {
     // DPE / CHAUFFAGE (maison et appart — Q37 + Q38)
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     {
-      prio:  dpeFG ? 'Excellent' : 'Tres bon',
+      prio:  dpeFG ? 'Excellent' : 'Très bon',
       titre: dpeFG ? 'Passoire thermique — DPE F/G' : (dpeE ? 'DPE E — a ameliorer avant vente' : 'DPE D — optimisation possible'),
       gain:  dpeFG ? '+6 a +12%' : (dpeE ? '+3 a +7%' : '+2 a +4%'),
       cout:  dpeFG ? '15 000 - 35 000 EUR' : '8 000 - 20 000 EUR',
@@ -736,11 +736,11 @@ async function generatePDF() {
     // HUISSERIES / FENETRES (maison et appart — Q31)
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     {
-      prio:  simpleVitrage ? 'Excellent' : 'Tres bon',
+      prio:  simpleVitrage ? 'Excellent' : 'Très bon',
       titre: simpleVitrage ? 'Fenetres simple vitrage — a remplacer' : 'Huisseries — double vitrage a moderniser',
       gain:  simpleVitrage ? '+3 a +6%' : '+2 a +4%',
       cout:  simpleVitrage ? '10 000 - 22 000 EUR' : '5 000 - 12 000 EUR',
-      roi:   'Tres bon',
+      roi:   'Très bon',
       desc:  simpleVitrage
         ? 'Simple vitrage d\'origine identifie. Deperditions thermiques majeures, DPE penalise, inconfort acoustique. Les acheteurs negocient 8 a 15% sur ce seul point. Remplacement en double ou triple vitrage = argument de vente decisif.'
         : 'Double vitrage ancien identifie. Remplacement par menuiseries PVC ou alu thermolaque : impact visuel immediat, gain thermique significatif, bien percu comme entretenu par les acheteurs.',
@@ -751,11 +751,11 @@ async function generatePDF() {
     // SALLE DE BAIN (maison et appart — Q30)
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     {
-      prio:  sdbVetuste ? 'Excellent' : 'Tres bon',
+      prio:  sdbVetuste ? 'Excellent' : 'Très bon',
       titre: sdbVetuste ? 'Salle de bain vetuste — a renover' : 'Salle de bain vieillissante — a moderniser',
       gain:  sdbVetuste ? '+4 a +7%' : '+2 a +5%',
       cout:  sdbVetuste ? '10 000 - 22 000 EUR' : '5 000 - 12 000 EUR',
-      roi:   'Tres bon',
+      roi:   'Très bon',
       desc:  sdbVetuste
         ? 'Salle de bain vetuste identifiee (baignoire fonte, faience ancienne). Premier point de blocage lors des visites. Renovation complete avec douche a l\'italienne + double vasque suspendue : coup de coeur garanti et offre au prix.'
         : 'Salle de bain vieillissante sans douche italienne detectee. Modernisation ciblee : douche a l\'italienne + vasque suspendue = ROI parmi les meilleurs en renovation. Peut faire basculer une offre au prix demande.',
@@ -766,11 +766,11 @@ async function generatePDF() {
     // CUISINE (maison et appart — Q29)
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     {
-      prio:  cuisineARefaire ? 'Tres bon' : 'Bon',
+      prio:  cuisineARefaire ? 'Très bon' : 'Bon',
       titre: cuisineARefaire ? 'Cuisine a refaire entierement' : 'Cuisine ancienne — a moderniser',
       gain:  cuisineARefaire ? '+3 a +6%' : '+2 a +4%',
       cout:  cuisineARefaire ? '12 000 - 25 000 EUR' : '5 000 - 14 000 EUR',
-      roi:   'Tres bon',
+      roi:   'Très bon',
       desc:  cuisineARefaire
         ? 'Cuisine a refaire entierement identifiee. Avec la salle de bain, c\'est la piece qui influe le plus sur la decision d\'achat. Cuisine ouverte equipee moderne : justifie une hausse de prix directe et visible.'
         : 'Cuisine ancienne a moderniser detectee. Remplacement facades + plan de travail + electromenager encastre : transformation visuelle majeure pour un budget tres maitrise. Fort impact sur les visites.',
@@ -781,7 +781,7 @@ async function generatePDF() {
     // SOLS (maison et appart — Q27)
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     {
-      prio:  solMauvais ? 'Tres bon' : 'Bon',
+      prio:  solMauvais ? 'Très bon' : 'Bon',
       titre: solMauvais ? 'Revetements de sol — a remplacer' : 'Revetements de sol — a valoriser',
       gain:  solMauvais ? '+2 a +5%' : '+1 a +3%',
       cout:  solMauvais ? '6 000 - 15 000 EUR' : '3 000 - 8 000 EUR',
@@ -796,13 +796,13 @@ async function generatePDF() {
     // PEINTURES / MURS (maison et appart — Q28)
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     {
-      prio:  peinturesMauv ? 'Tres bon' : 'Bon',
+      prio:  peinturesMauv ? 'Très bon' : 'Bon',
       titre: peinturesMauv ? 'Murs et plafonds — remise en etat' : 'Peintures — rafraichissement',
       gain:  peinturesMauv ? '+2 a +4%' : '+1 a +3%',
       cout:  peinturesMauv ? '4 000 - 10 000 EUR' : '1 500 - 5 000 EUR',
       roi:   'Excellent',
       desc:  peinturesMauv
-        ? 'Murs et plafonds en mauvais etat identifies (fissures, humidite, traces). Ragrement + peinture neutre indispensable avant les photos et les visites. Impact direct sur la perception de valeur et le montant de l\'offre.'
+        ? 'Murs et plafonds en mauvais etat identifiés (fissures, humidite, traces). Ragrement + peinture neutre indispensable avant les photos et les visites. Impact direct sur la perception de valeur et le montant de l\'offre.'
         : 'Peintures a rafraichir identifiees. Teintes neutres (blanc casse, gris perle) pour un cout modeste : fort impact sur la perception. Un acheteur estime inconsciemment un bien fraichement peint 3 a 5% plus cher.',
       cond: peinturesVetustes
     },
@@ -813,7 +813,7 @@ async function generatePDF() {
     // PAS affiché si jardin arboré (0) ou bien entretenu (1)
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     {
-      prio:  jardinFriche ? 'Tres bon' : 'Bon',
+      prio:  jardinFriche ? 'Très bon' : 'Bon',
       titre: jardinFriche ? 'Jardin en friche — remise en etat complete' : 'Jardin non amenage — a valoriser',
       gain:  jardinFriche ? '+3 a +6%' : '+1 a +3%',
       cout:  jardinFriche ? '2 000 - 8 000 EUR' : '500 - 3 000 EUR',
@@ -828,7 +828,7 @@ async function generatePDF() {
     // PLOMBERIE (maison et appart — Q34, surtout anciens biens)
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     {
-      prio:  plombUrgent ? 'Excellent' : 'Tres bon',
+      prio:  plombUrgent ? 'Excellent' : 'Très bon',
       titre: plombUrgent ? 'Canalisations plomb — remplacement urgent' : 'Plomberie — mise a niveau',
       gain:  plombUrgent ? '+2 a +5%' : '+1 a +3%',
       cout:  plombUrgent ? '6 000 - 18 000 EUR' : '3 000 - 9 000 EUR',
@@ -858,14 +858,14 @@ async function generatePDF() {
     // ETAT IMMEUBLE COPROPRIETE (appartement seulement — Q43)
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     {
-      prio:  a[43] === 3 ? 'Excellent' : 'Tres bon',
-      titre: a[43] === 3 ? 'Immeuble degrade — frein a la vente' : 'Etat de l\'immeuble — a surveiller',
+      prio:  a[43] === 3 ? 'Excellent' : 'Très bon',
+      titre: a[43] === 3 ? 'Immeuble degrade — frein a la vente' : 'État de l\'immeuble — a surveiller',
       gain:  a[43] === 3 ? '+3 a +6%' : '+1 a +3%',
       cout:  'Variable (quote-part syndic)',
-      roi:   'Tres bon',
+      roi:   'Très bon',
       desc:  a[43] === 3
         ? 'Immeuble degrade identifie avec travaux importants votes ou a venir. Les acheteurs et les banques penalisent fortement ce point. Participation active au syndic pour accelérer les travaux avant la mise en vente.'
-        : 'Etat moyen de l\'immeuble detecte. Des travaux de facade ou de parties communes a venir peuvent peser sur le prix de vente. Bien anticiper et communiquer sur les charges previsionnelles aux acheteurs.',
+        : 'État moyen de l\'immeuble detecte. Des travaux de facade ou de parties communes a venir peuvent peser sur le prix de vente. Bien anticiper et communiquer sur les charges previsionnelles aux acheteurs.',
       cond: isAppart && immeubleDegrade
     },
 
@@ -896,7 +896,7 @@ async function generatePDF() {
     },
   ];
 
-  // Tri par priorité : Critique → Excellent → Tres bon → Bon
+  // Tri par priorité : Critique → Excellent → Très bon → Bon
   leviersAll.sort(function(x, y) {
     return (poids[x.prio] || 3) - (poids[y.prio] || 3);
   });
@@ -931,7 +931,7 @@ async function generatePDF() {
     rr(W-54,ly+5,38,9,1,[20,30,20],null);
     t(lev.gain,W-35,ly+11,9,'bold',GREEN,'center');
     // Cout + ROI
-    t('Cout : '+lev.cout,W-16,ly+itemH-10,6,'normal',TEXT3,'right');
+    t('Coût : '+lev.cout,W-16,ly+itemH-10,6,'normal',TEXT3,'right');
     t('ROI : '+lev.roi,W-16,ly+itemH-5,6,'bold',GOLD,'right');
     ly += itemH + 4;
   });
@@ -949,8 +949,8 @@ async function generatePDF() {
   box(0,0,1.5,H,GOLD,null);
   pageHeader();
 
-  t('Synthese',14,24,18,'bold',TEXT);
-  t('& Strategie',14+36,24,18,'normal',GOLD);
+  t('Synthèse',14,24,18,'bold',TEXT);
+  t('& Stratégie',14+36,24,18,'normal',GOLD);
   ln(14,27,W-14,27,BG3,0.3);
   t('Analyse du contexte local et recommandations avant mise en vente',14,33,8,'normal',TEXT3);
 
@@ -991,7 +991,7 @@ async function generatePDF() {
   t('Recommandations avant mise en vente',14,cty+6,9,'bold',TEXT);
   ln(14,cty+8,W-14,cty+8,BG3,0.3);
   const recs = [
-    'Realisez les travaux prioritaires identifies avant les premieres visites.',
+    'Réalisez les travaux prioritaires identifiés avant les premieres visites.',
     'Faites realiser vos diagnostics DPE et electricite en amont.',
     'Valorisez l\'exterieur : jardin nettoye, quelques plantes — faible cout, fort impact.',
     'Investissez dans des photos professionnelles — 80% des prises de contact en dependent.',
@@ -1004,7 +1004,7 @@ async function generatePDF() {
     ry2 += 7;
   });
 
-  // Strategie de prix
+  // Stratégie de prix
   const ud = p.urgenceData||{label:'Standard',delaiCible:'3-5 mois',conseil:'Positionnez-vous au prix de marche.'};
   const uidx = safeNum(p.urgenceIdx);
   const urgCol = uidx===0 ? RED : uidx===1 ? ORANGE : GREEN;
@@ -1013,7 +1013,7 @@ async function generatePDF() {
   rr(14,ry2,W-28,32,1,BG3,urgCol,0.5);
   box(14,ry2,W-28,2,urgCol,null);
   t('STRATEGIE DE PRIX  —  '+(ud.label||'').toUpperCase(),18,ry2+8,7,'bold',urgCol);
-  t('Prix recommande :',18,ry2+15,7.5,'normal',TEXT2);
+  t('Prix recommandé :',18,ry2+15,7.5,'normal',TEXT2);
   t(fmt(p.prixStrategique)+' EUR',W-16,ry2+15,13,'bold',urgCol,'right');
   ln(18,ry2+18,W-18,ry2+18,[50,50,50],0.3);
   const diff2 = safeNum(p.prixStrategique) - safeNum(p.totalValue);
@@ -1090,13 +1090,13 @@ async function generatePDF() {
 
   rr(14, liqY, W-28, 10, 1, [22,22,14], [201,168,76,0.2], 0.4);
   box(14, liqY, 2, 10, GOLD, null);
-  t('Methode de valorisation — 6 dimensions (base DVF notariale)', 20, liqY+6.5, 7, 'bold', GOLD);
+  t('Méthode de valorisation — 6 dimensions (base DVF notariale)', 20, liqY+6.5, 7, 'bold', GOLD);
   liqY += 12;
 
   const coefRows = [
     ['Localisation (15%)',    cLocD],
-    ['Etat structure (24%)',  cEtatD],
-    ['Energie / DPE (18%)',   cEnerD],
+    ['État structure (24%)',  cEtatD],
+    ['Énergie / DPE (18%)',   cEnerD],
     ['Finitions (14%)',       cFinD],
     ['Standing / atouts (13%)', cStandD],
     ['Marche local (6%)',     cMarchD],
@@ -1304,14 +1304,14 @@ async function generatePDF() {
   t('METHODOLOGIE MONESTIM', BX+PAD, p6y+PAD+6, 8, 'bold', [160,210,255]);
   ln(BX+PAD, p6y+PAD+9, BX+BW-PAD, p6y+PAD+9, [40,70,110], 0.3);
   const mLines = [
-    'MonEstim est l\'un des rares outils grand public a combiner analyse hedoniste multi-dimensionnelle',
+    'MonEstim est l\'un des rares outils grand public a combiner analyse hédoniste multi-dimensionnelle',
     'et donnees transactionnelles officielles (DVF). Votre rapport repose sur 70 criteres exhaustifs,',
     'bien au-dela des 10 a 15 questions des outils classiques, couvrant chaque dimension qui influence',
     'reellement la valeur : localisation fine, etat technique, performance energetique, standing, marche',
     'local en temps reel, situation juridique et potentiel de valorisation personnalise.',
     '',
     '7 dimensions ponderees : Localisation 15% | Etat 18% | Energie 20% | Standing 13%',
-    'Marche 11% | Copropriete/Terrain 8% | Juridique 5%  —  Croise avec DVF de votre commune.',
+    'Marche 11% | Copropriete/Terrain 8% | Juridique 5%  —  Croisé avec DVF de votre commune.',
   ];
   mLines.forEach((l,i) => {
     const bold = i===6||i===7;
@@ -1329,9 +1329,9 @@ async function generatePDF() {
   ln(BX+PAD, p6y+PAD+9, BX+BW-PAD, p6y+PAD+9, [40,80,60], 0.3);
   const srcs = [
     { lbl:'DVF — DGFiP / data.gouv.fr',                desc:'Base nationale des ventes notariees (2020-2025) — open data officiel' },
-    { lbl:'API Adresse — adresse.data.gouv.fr',         desc:'Geocodage commune, population et contexte geographique (BAN)' },
+    { lbl:'API Adresse — adresse.data.gouv.fr',         desc:'Géocodage commune, population et contexte geographique (BAN)' },
     { lbl:'Observatoires : FNAIM, Notaires de France',  desc:'Prix de reference au m2 par commune, departement et type de bien' },
-    { lbl:'Criteres declaratifs proprietaire (70 pts)', desc:'Analyse qualitative : technique, energetique, juridique, marche local' },
+    { lbl:'Criteres déclaratifs proprietaire (70 pts)', desc:'Analyse qualitative : technique, energetique, juridique, marche local' },
   ];
   srcs.forEach((s2,i) => {
     const sy = p6y+PAD+14+i*9;
@@ -1349,7 +1349,7 @@ async function generatePDF() {
   ln(BX+PAD, p6y+PAD+9, BX+BW-PAD, p6y+PAD+9, [50,50,50], 0.3);
   const statLines = [
     'MonEstim n\'est pas un agent immobilier et n\'exerce aucune activite d\'entremise dans des transactions immobilieres.',
-    'MonEstim n\'est pas soumis a la loi n 70-9 du 2 janvier 1970 (loi Hoguet).',
+    'MonEstim n\'est pas soumis a la loi n° 70-9 du 2 janvier 1970 (loi Hoguet).',
     'Pour toute transaction, consultez un agent immobilier certifie, un notaire ou un expert immobilier agree.',
   ];
   statLines.forEach((l,i) => {
@@ -1369,7 +1369,7 @@ async function generatePDF() {
     'La valeur reelle d\'un bien peut varier en fonction de facteurs non pris en compte dans ce questionnaire.',
     'MonEstim ne peut etre tenu responsable de toute decision prise sur la base de ces estimations.',
     'CONFIDENTIALITE : MonEstim ne conserve aucune donnee sur votre bien ni votre identite. Ce rapport existe',
-    'uniquement dans votre session de navigation. Conservez ce PDF — il ne pourra pas etre regenere.',
+    'uniquement dans votre session de navigation. Conservez ce PDF — il ne pourra pas être régénéré.',
   ];
   avLines.forEach((l,i) => {
     doc.setFont('helvetica','normal'); doc.setFontSize(6.5); doc.setTextColor(130,120,90);
@@ -1380,7 +1380,7 @@ async function generatePDF() {
   // ── Signature ──────────────────────────────────────────────
   ln(BX, p6y, BX+BW, p6y, BG3, 0.3);
   t('© 2026 MonEstim — Tous droits reserves', W/2, p6y+7, 7, 'bold', TEXT3, 'center');
-  t('Rapport confidentiel genere le '+date+' — Ref. '+ref, W/2, p6y+13, 6.5, 'normal', [80,78,74], 'center');
+  t('Rapport confidentiel généré le '+date+' — Ref. '+ref, W/2, p6y+13, 6.5, 'normal', [80,78,74], 'center');
   t('monestim.fr', W/2, p6y+20, 9, 'bold', GOLD, 'center');
 
   // ── Footer ─────────────────────────────────────────────────
