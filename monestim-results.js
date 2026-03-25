@@ -1039,8 +1039,12 @@ async function generatePDF() {
   const villeLabel = p.ville || 'France';
 
   // ── BLOC PRIX MARCHÉ LOCAL ──────────────────────────────────
-  const cityData = getCityPrices(p.ville, p.typeBien === 1 ? 'appart' : 'maison');
-  const bandePrix = (p.typeBien === 1) ? cityData.appart : cityData.maison;
+  // Lire directement depuis le payload — plus fiable que getCityPrices (évite dépendance lastPrix global)
+  const _isAppart = (p.typeBien === 1 || p.typeBien === 'appart');
+  const _band  = p.prixBand     || [0, 0, 0];
+  const _bandA = p.prixBandAppart || _band;
+  const cityData = { maison: _band, appart: _bandA };
+  const bandePrix = _isAppart ? cityData.appart : cityData.maison;
   const prixBas  = bandePrix[0] || Math.round(baseM2 * 0.88);
   const prixMed  = bandePrix[1] || baseM2;
   const prixHaut = bandePrix[2] || Math.round(baseM2 * 1.12);
