@@ -720,7 +720,18 @@ async function generatePDF() {
         : (dpeE
           ? 'DPE E identifie. Les acheteurs sont de plus en plus sensibles au classement energetique. Travaux d\'isolation ou changement de chauffage pour atteindre D ou C : prime de 3 a 7% sur le prix.'
           : 'DPE D ameliorable. Pompe a chaleur ou isolation renforcee pour passer en classe C : prime de 2 a 4% et argument commercial fort face a des acheteurs attentifs a la facture.'),
-      cond: dpePassable || chauffMauvais
+      cond: dpePassable
+    },
+    {
+      prio:  'Très bon',
+      titre: chauffFioul ? 'Chauffage fioul — remplacement recommande' : 'Chauffage electrique — passage a la PAC conseille',
+      gain:  '+2 a +5%',
+      cout:  chauffFioul ? '8 000 - 15 000 EUR' : '8 000 - 15 000 EUR',
+      roi:   'Très bon',
+      desc:  chauffFioul
+        ? 'Chauffage fioul identifie. Les acheteurs penalisent fortement ce type de chauffage depuis la loi Climat. Remplacement par une PAC : argument commercial majeur et prime de 2 a 5% sur le prix.'
+        : 'Chauffage electrique par convecteurs identifie. Perceived comme couteux par les acheteurs. Installation d\'une PAC air/eau ou air/air : reduit la facture et ameliore le DPE — prime de 2 a 4%.',
+      cond: chauffMauvais && !dpePassable
     },
     {
       prio:  'Bon',
