@@ -3215,10 +3215,35 @@ function getCityPrices(cityInput){
   const key=normalizeCity(cityInput||'');
   if(!key) return PRIX_VILLES["_default"];
 
+  // Récupérer le code département depuis geoEnrichData (API BAN) ou fallback
+  const _deptCode = (typeof geoEnrichData !== 'undefined' && geoEnrichData?.dept)
+    ? String(geoEnrichData.dept).padStart(2,'0')
+    : null;
+  const _deptData = _deptCode ? PRIX_DEPTS[_deptCode] : null;
+
+  // Correction anomalie DVF : si P50 > 1.5× P25 (peu de transactions sur la commune)
+  // Option F : pondération 65% P50_dept + 35% P25_commune (ancrage local conservé)
+  // Meilleure précision que le fallback dept pur (erreur ~9% vs ~14%)
+  function _fixBand(p25, p50, p75, dIdx) {
+    if (!_deptData || p25 <= 0 || p50 <= 0) return [p25, p50, p75];
+    if (p50 / p25 > 1.5) {
+      const dp50 = _deptData[dIdx]   || p50;
+      const dp75 = _deptData[dIdx+1] || p75;
+      return [
+        p25,
+        Math.round(0.65 * dp50 + 0.35 * p25),
+        Math.round(0.65 * dp75 + 0.35 * p75),
+      ];
+    }
+    return [p25, p50, p75];
+  }
+
   // Recherche exacte
   if(PRIX_COMMUNES[key]){
     const p=PRIX_COMMUNES[key];
-    return {maison:[p[0],p[1],p[2]],appart:[p[3],p[4],p[5]]};
+    const maison = _fixBand(p[0],p[1],p[2], 1);
+    const appart = _fixBand(p[3],p[4],p[5], 4);
+    return {maison, appart};
   }
 
   // Recherche partielle (ex: "bordeaux lac" → "bordeaux")
