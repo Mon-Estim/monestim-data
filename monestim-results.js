@@ -409,6 +409,18 @@ async function generatePDF() {
     _alertY += 14;
   }
 
+  // ── ENCART BIEN D'EXCEPTION ─────────────────────────────────────
+  // Déclenché si score >= 80 ET vue panoramique ou mer
+  const _isException = safeNum(s.global) >= 80 && p.vueAlert != null;
+  if (_isException) {
+    rr(14, _alertY, W-28, 18, 1, [20,16,30], [150,120,220,0.15], 0.5);
+    box(14, _alertY, 2, 18, [150,120,220], null);
+    t('BIEN D\'EXCEPTION — NOTE METHODOLOGIQUE', 20, _alertY+5.5, 6.5, 'bold', [150,120,220]);
+    t('Ce bien présente des caractéristiques d\'exception qui peuvent dépasser le référentiel DVF local.', 20, _alertY+11, 5.2, 'normal', TEXT2);
+    t('Une commercialisation élargie (acheteurs régionaux/nationaux) peut générer une prime de 10 à 20%.', 20, _alertY+15.5, 5.2, 'normal', TEXT2);
+    _alertY += 22;
+  }
+
   // 3 KPIs — positionnés après les encarts (_alertY dynamique)
   const _kpiY = _alertY + 4;
   const kpis = [

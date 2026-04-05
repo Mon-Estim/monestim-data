@@ -2045,14 +2045,14 @@ const questions = [
     {icon:"🚇",label:"Métro / RER à moins de 5 min à pied", val:1.2},
     {icon:"🚌",label:"Bus / tram fréquent bien desservi", val:1.1},
     {icon:"🚉",label:"Gare TER / intercités à moins de 2 km", val:1.05},
-    {icon:"🚫",label:"Peu ou pas de transports en commun", val:0.9}
+    {icon:"🚫",label:"Peu ou pas de transports en commun", val:0.97}
   ]},
 
   { section:"📍 Localisation", text:"Proximité des commerces et services du quotidien ?", hint:"Écoles, commerces, médecins, pharmacie, boulangerie...", type:"options", cols:2, options:[
     {icon:"🛒",label:"Tout à pied en moins de 5 min", val:1.15},
     {icon:"🚶",label:"Accessible à pied en 10-15 min", val:1.08},
-    {icon:"🚗",label:"En voiture uniquement (15-30 min)", val:0.95},
-    {icon:"🌾",label:"Commodités rares, zone isolée", val:0.85}
+    {icon:"🚗",label:"En voiture uniquement (15-30 min)", val:0.98},
+    {icon:"🌾",label:"Commodités rares, zone isolée", val:0.92}
   ]},
 
   { section:"📍 Localisation", text:"Vue et environnement immédiat du bien ?", hint:"Ce que l'on voit depuis les fenêtres et pièces de vie.", type:"options", cols:1, options:[
@@ -3970,12 +3970,12 @@ function _calculateScores() {
   const q06opts = questions[6]?.options || [];
   const vueOpt  = q06opts[vueIdx] || {};
   const vueMerPrime     = (vueOpt.vueMer      === true) ? 0.15 : 0;
-  const vuePanoPrime    = (vueOpt.vuePanorama === true) ? 0.08 : 0;
+  const vuePanoPrime    = (vueOpt.vuePanorama === true) ? 0.15 : 0;
   const vuePrimeTotal   = vueMerPrime + vuePanoPrime; // au plus l'un des deux
   const vueAlert = vueMerPrime > 0
     ? { label: 'Vue mer exceptionnelle', detail: 'Façade océan / front de plage — prime marché +15%', pct: 15, type: 'mer' }
     : vuePanoPrime > 0
-    ? { label: 'Vue panoramique exceptionnelle', detail: 'Lac, montagne, fleuve — prime marché +8%', pct: 8, type: 'panorama' }
+    ? { label: 'Vue panoramique exceptionnelle', detail: 'Lac, montagne, fleuve, château — prime marché +15%', pct: 15, type: 'panorama' }
     : null;
 
   // Prix/m² avec prime vue appliquée APRÈS malus
