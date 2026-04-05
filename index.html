@@ -1829,7 +1829,7 @@
         </div>
         <div class="cta-city-wrap" style="margin-bottom:16px; position:relative;">
           <label class="cta-label">Ville précise du bien</label>
-          <input id="city-input" class="text-input" style="margin-bottom:0; font-size:16px;" type="text" placeholder="Ex : Lyon, Bordeaux, Annecy..." autocomplete="off" oninput="cityAutocomplete(this.value)" onblur="setTimeout(hideCitySuggestions, 200)">
+          <input id="city-input" class="text-input" style="margin-bottom:0; font-size:16px;" type="text" placeholder="Ex : Lyon, Bordeaux, Paris 9e..." autocomplete="off" oninput="cityAutocomplete(this.value)" onblur="setTimeout(hideCitySuggestions, 200)">
           <div id="city-suggestions" style="display:none; position:absolute; top:100%; left:0; right:0; background:#1A1A1A; border:1px solid rgba(201,168,76,0.4); border-top:none; border-radius:0 0 10px 10px; z-index:100; max-height:240px; overflow-y:auto; box-shadow:0 8px 24px rgba(0,0,0,0.5);"></div>
         </div>
         <div id="geo-enrich-info" style="display:none; margin-top:-8px; margin-bottom:12px; padding:8px 12px; background:rgba(201,168,76,0.06); border:1px solid rgba(201,168,76,0.15); border-radius:8px;"></div>
@@ -3134,10 +3134,36 @@ function normalizeCity(s){
     .replace(/\s+/g," ").trim();
 }
 
+// Villes avec arrondissements → affichage automatique au clic
+const VILLES_ARRONDISSEMENTS = {
+  'paris':     ['Paris 1er','Paris 2e','Paris 3e','Paris 4e','Paris 5e','Paris 6e','Paris 7e','Paris 8e','Paris 9e','Paris 10e','Paris 11e','Paris 12e','Paris 13e','Paris 14e','Paris 15e','Paris 16e','Paris 17e','Paris 18e','Paris 19e','Paris 20e'],
+  'lyon':      ['Lyon 1er','Lyon 2e','Lyon 3e','Lyon 4e','Lyon 5e','Lyon 6e','Lyon 7e','Lyon 8e','Lyon 9e'],
+  'marseille': ['Marseille 1er','Marseille 2e','Marseille 3e','Marseille 4e','Marseille 5e','Marseille 6e','Marseille 7e','Marseille 8e','Marseille 9e','Marseille 10e','Marseille 11e','Marseille 12e','Marseille 13e','Marseille 14e','Marseille 15e','Marseille 16e'],
+};
+
 function cityAutocomplete(val){
   const box=document.getElementById('city-suggestions');
   if(!val||val.length<2){box.style.display='none';return;}
   const q=normalizeCity(val);
+
+  // Vérifier si c'est exactement Paris, Lyon ou Marseille → proposer les arrondissements
+  if(VILLES_ARRONDISSEMENTS[q]){
+    const arrs = VILLES_ARRONDISSEMENTS[q];
+    box.innerHTML = `
+      <div style="padding:8px 16px 4px;font-size:11px;color:rgba(201,168,76,0.7);letter-spacing:0.05em;text-transform:uppercase;">
+        Choisissez votre arrondissement
+      </div>` +
+      arrs.map(v=>`
+        <div onclick="selectCity('${v} arrondissement')"
+             style="padding:9px 16px;cursor:pointer;font-size:13px;color:#F0EDE8;
+                    border-bottom:1px solid rgba(255,255,255,0.05);transition:background 0.12s;"
+             onmouseenter="this.style.background='rgba(201,168,76,0.15)'"
+             onmouseleave="this.style.background='transparent'">
+          📍 ${v} arrondissement
+        </div>`).join('');
+    box.style.display='block';
+    return;
+  }
 
   // Chercher d'abord les communes qui commencent par la saisie
   const starts=[], contains=[];
@@ -3165,7 +3191,7 @@ function cityAutocomplete(val){
 function selectCity(ville){
   document.getElementById('city-input').value=ville;
   hideCitySuggestions();
-  enrichLocalisation(ville); // Amélioration 4 — enrichissement auto
+  enrichLocalisation(ville); // enrichissement auto
 }
 
 // ENRICHISSEMENT AUTO LOCALISATION — Amélioration 4
